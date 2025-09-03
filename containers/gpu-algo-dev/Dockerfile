@@ -107,11 +107,10 @@ RUN mkdir -p /workspace && \
     cd /workspace && \
     chown -R 1000:1000 nvbench
 
-# Install Claude Code CLI
-RUN curl -fsSL https://claude.ai/install.sh | bash
-
-# Add local bin to PATH for Claude CLI
-ENV PATH="/root/.local/bin:$PATH"
+# Install Claude Code CLI and make it available system-wide
+RUN curl -fsSL https://claude.ai/install.sh | bash && \
+    cp /root/.local/bin/claude /usr/local/bin/claude && \
+    chmod +x /usr/local/bin/claude
 
 # Install OpenAI Codex CLI
 RUN npm install -g @openai/codex

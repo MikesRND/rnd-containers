@@ -4,7 +4,7 @@
 # Container configuration
 IMAGE_NAME := gpu-algo-dev
 DOCKER_HUB_USER := mikesrnd
-VERSION := 1.0.2
+VERSION := 1.0.3
 
 # Full image names
 LOCAL_IMAGE := $(IMAGE_NAME):latest
