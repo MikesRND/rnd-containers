@@ -1,0 +1,30 @@
+# Docker
+*.log
+.docker/
+
+# Build artifacts
+build/
+.output/
+*.o
+*.so
+*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Temporary files
+tmp/
+temp/
+*.tmp

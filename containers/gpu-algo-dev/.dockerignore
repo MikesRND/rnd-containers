@@ -1,0 +1,11 @@
+# Development files
+.git
+.gitignore
+*.md
+Makefile
+
+# Temporary and build files
+*.log
+*.tmp
+build/
+workspace/
