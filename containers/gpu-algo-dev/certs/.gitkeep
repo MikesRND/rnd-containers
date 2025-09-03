@@ -1,0 +1,2 @@
+# Keep this directory for corporate certificates
+# Place any .crt, .pem, or .cer files here to be included in the container

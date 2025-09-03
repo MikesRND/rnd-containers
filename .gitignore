@@ -1,0 +1,37 @@
+# Docker
+*.log
+.docker/
+
+# Certificates (except .gitkeep)
+containers/*/certs/*.crt
+containers/*/certs/*.pem
+containers/*/certs/*.cer
+containers/*/certs/*.key
+!containers/*/certs/.gitkeep
+
+# Build artifacts
+build/
+.output/
+*.o
+*.so
+*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Temporary files
+tmp/
+temp/
+*.tmp

@@ -1,0 +1,25 @@
+name: gpu-algo-dev
+services:
+  gpu-algo-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USERNAME: ${USER:-developer}
+        USERID: ${USER_ID:-1000}
+        GROUPID: ${GROUP_ID:-1000}
+    image: gpu-algo-dev:latest
+    container_name: gpu-algo-dev
+    working_dir: /workspace
+    volumes:
+      - ${PROJECT_PATH:-./workspace}:/workspace:cached
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - USERNAME=${USER:-developer}
+      - USERID=${USER_ID:-1000}
+      - GROUPID=${GROUP_ID:-1000}
+    tty: true
+    stdin_open: true
+    entrypoint: ["/entrypoint.sh", "sleep", "infinity"]
