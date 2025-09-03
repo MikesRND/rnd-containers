@@ -58,9 +58,12 @@ RUN apt-get install -y \
     build-essential \
     git \
     wget \
+    curl \
     clang-format \
     doxygen \
-    graphviz
+    graphviz \
+    nodejs \
+    npm
 
 # Install MatX v0.9.2 library for GPU tensor operations
 # MatX is a header-only library that provides high-level tensor operations with CUDA backend
@@ -103,6 +106,15 @@ RUN mkdir -p /workspace && \
     rm -rf build && \
     cd /workspace && \
     chown -R 1000:1000 nvbench
+
+# Install Claude Code CLI
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+# Add local bin to PATH for Claude CLI
+ENV PATH="/root/.local/bin:$PATH"
+
+# Install OpenAI Codex CLI
+RUN npm install -g @openai/codex
 
 # Clean up apt cache to reduce image size
 RUN rm -rf /var/lib/apt/lists/*
