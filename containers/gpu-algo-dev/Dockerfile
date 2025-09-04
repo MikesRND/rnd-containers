@@ -82,7 +82,6 @@ RUN cd /tmp && \
           -DCMAKE_INSTALL_PREFIX=/usr/local \
           .. && \
     make -j$(nproc) install && \
-    cp -r ../include/matx* /usr/local/include/ || true && \
     cd / && \
     rm -rf /tmp/MatX/build && \
     rm -rf /tmp/MatX/.git
