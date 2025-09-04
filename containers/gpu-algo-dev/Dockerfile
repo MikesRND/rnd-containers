@@ -14,7 +14,6 @@ RUN chmod +x /entrypoint.sh /opt/nvidia/nvidia_entrypoint_no_exec.sh
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["bash"]
 
 # Install any corporate certificates if they exist
 COPY certs /tmp/certs/
@@ -63,7 +62,9 @@ RUN apt-get install -y \
     doxygen \
     graphviz \
     nodejs \
-    npm
+    npm \
+    libboost-all-dev \
+    libpoco-dev
 
 # Install MatX v0.9.2 library for GPU tensor operations
 # MatX is a header-only library that provides high-level tensor operations with CUDA backend
@@ -106,6 +107,28 @@ RUN mkdir -p /workspace && \
     rm -rf build && \
     cd /workspace && \
     chown -R 1000:1000 nvbench
+
+# Install spdlog (header-only C++ logging library) to /workspace/spdlog and copy headers
+RUN cd /workspace && \
+    git clone --branch v1.x --depth 1 https://github.com/gabime/spdlog.git && \
+    cp -r spdlog/include/spdlog /usr/local/include/
+
+# Install Taskflow - A General-purpose Task-parallel Programming Framework
+# Taskflow provides modern C++17/20 parallel task programming for CPU and GPU
+RUN cd /workspace && \
+    git clone --branch master --depth 1 https://github.com/taskflow/taskflow.git && \
+    cd taskflow && \
+    mkdir build && cd build && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DTF_BUILD_TESTS=OFF \
+          -DTF_BUILD_EXAMPLES=OFF \
+          -DTF_BUILD_BENCHMARKS=OFF \
+          .. && \
+    make -j$(nproc) install && \
+    rm -rf build && \
+    cd /workspace && \
+    chown -R 1000:1000 taskflow
 
 # Install Claude Code CLI and make it available system-wide
 RUN curl -fsSL https://claude.ai/install.sh | bash && \
