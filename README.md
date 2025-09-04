@@ -55,6 +55,40 @@ Each container maintains its own version in its Makefile.
 - `gpu-algo-dev:1.0` - Latest patch of minor version
 - `gpu-algo-dev:1` - Latest minor/patch of major version
 
+## Certificate Management
+
+### Using Pre-built Images (Docker Hub)
+Pre-built images are available without certificates for use in open environments:
+```bash
+docker pull mikesrnd/gpu-algo-dev:latest
+docker run --runtime=nvidia -it mikesrnd/gpu-algo-dev:latest
+```
+
+### Corporate Environments (Local Build Required)
+For corporate networks requiring custom certificates:
+
+1. **Add your certificates:**
+   ```bash
+   cd containers/gpu-algo-dev/certs/
+   cp /path/to/your-corporate-cert.crt .
+   cp /path/to/another-cert.pem .
+   ```
+
+2. **Build locally:**
+   ```bash
+   cd containers/gpu-algo-dev
+   make build
+   # OR using docker-compose
+   docker-compose up -d
+   ```
+
+3. **Supported certificate formats:** `.crt`, `.pem`, `.cer`
+
+### Certificate Security
+- **Certificates are NEVER published to Docker Hub**
+- Local `certs/` directory is excluded from git and Docker builds for public images
+- Each user must add their own certificates locally before building
+
 ## Docker Hub Integration
 
 Images are published to Docker Hub under the `mikesrnd` namespace.

@@ -1,0 +1,21 @@
+# Prevent certificates from being included in Docker Hub builds
+# This ensures only empty certs/ directory structure is published
+certs/*.crt
+certs/*.pem
+certs/*.cer
+certs/*.key
+
+# Keep .gitkeep to preserve directory structure
+!certs/.gitkeep
+
+# Development files
+.git
+.gitignore
+*.md
+Makefile
+
+# Temporary and build files
+*.log
+*.tmp
+build/
+workspace/
