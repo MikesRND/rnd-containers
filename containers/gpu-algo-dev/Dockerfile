@@ -1,6 +1,6 @@
 # NVIDIA Clara Holoscan GPU Development Container
 # Based on NVIDIA Clara Holoscan SDK with GPU support for scientific computing
-FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.5.0-dgpu
+FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.6.0-dgpu
 
 # Labels for Docker Hub
 LABEL maintainer="mikesrnd"
@@ -66,25 +66,26 @@ RUN apt-get install -y \
     libboost-all-dev \
     libpoco-dev
 
-# Install MatX v0.9.2 library for GPU tensor operations
+# DEPRECATED: MatX is now included with Holoscan SDK, no need to install separately
+    # Install MatX v0.9.2 library for GPU tensor operations
 # MatX is a header-only library that provides high-level tensor operations with CUDA backend
-RUN cd /tmp && \
-    git clone --branch v0.9.2 --depth 1 https://github.com/NVIDIA/MatX.git && \
-    cd MatX && \
-    mkdir build && \
-    cd build && \
-    export CPM_SOURCE_CACHE=/usr/local/share/cpm-cache && \
-    mkdir -p /usr/local/share/cpm-cache && \
-    cmake -DMATX_BUILD_TESTS=OFF \
-          -DMATX_BUILD_BENCHMARKS=OFF \
-          -DMATX_BUILD_EXAMPLES=OFF \
-          -DMATX_BUILD_DOCS=OFF \
-          -DCMAKE_INSTALL_PREFIX=/usr/local \
-          .. && \
-    make -j$(nproc) install && \
-    cd / && \
-    rm -rf /tmp/MatX/build && \
-    rm -rf /tmp/MatX/.git
+# RUN cd /tmp && \
+#     git clone --branch v0.9.2 --depth 1 https://github.com/NVIDIA/MatX.git && \
+#     cd MatX && \
+#     mkdir build && \
+#     cd build && \
+#     export CPM_SOURCE_CACHE=/usr/local/share/cpm-cache && \
+#     mkdir -p /usr/local/share/cpm-cache && \
+#     cmake -DMATX_BUILD_TESTS=OFF \
+#           -DMATX_BUILD_BENCHMARKS=OFF \
+#           -DMATX_BUILD_EXAMPLES=OFF \
+#           -DMATX_BUILD_DOCS=OFF \
+#           -DCMAKE_INSTALL_PREFIX=/usr/local \
+#           .. && \
+#     make -j$(nproc) install && \
+#     cd / && \
+#     rm -rf /tmp/MatX/build && \
+#     rm -rf /tmp/MatX/.git
 
 # Install nvbench for CUDA kernel benchmarking
 # nvbench provides advanced GPU kernel timing and benchmarking capabilities
