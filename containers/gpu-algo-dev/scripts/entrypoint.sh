@@ -60,6 +60,14 @@ if ! id "$USER_NAME" > /dev/null 2>&1; then
     fi
 fi
 
+# Fix /workspace permissions if it exists
+if [ -d "/workspace" ]; then
+    echo "[entrypoint] Fixing /workspace permissions for user $USER_NAME ($USER_ID:$GROUP_ID)"
+    chown -R "$USER_ID:$GROUP_ID" /workspace 2>/dev/null || {
+        echo "[entrypoint] WARNING: Could not change /workspace ownership (may need root privileges)"
+    }
+fi
+
 # Switch to the user and change to workspace directory if it exists
 WORKSPACE_DIR="/workspace/gpu-algorithms"
 if [ -d "$WORKSPACE_DIR" ]; then
