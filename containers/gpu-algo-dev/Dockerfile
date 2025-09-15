@@ -19,7 +19,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 # ----------------------------------------------------
     
 # Install any corporate certificates if they exist in container/certs
-COPY container/certs /tmp/certs/
+COPY certs /tmp/certs/
 RUN if [ -n "$(find /tmp/certs -name '*.crt' -o -name '*.pem' -o -name '*.cer' 2>/dev/null | head -1)" ]; then \
         mkdir -p /usr/local/share/ca-certificates && \
         find /tmp/certs \( -name '*.crt' -o -name '*.pem' -o -name '*.cer' \) -exec cp {} /usr/local/share/ca-certificates/ \; && \
@@ -117,7 +117,7 @@ RUN mkdir -p /tmp/builds /usr/local/share/cpm-cache && \
 # ----------------------------------------------------    
 # Holohub Stuff
 # ----------------------------------------------------
-RUN && \
+RUN true && \
     # Clone holohub into workspace
     cd /workspace && \
     git clone --branch holoscan-sdk-3.6.0 --depth 1 https://github.com/nvidia-holoscan/holohub.git && \
@@ -129,10 +129,10 @@ RUN && \
     if ! grep -q "VERSION_ID=\"22.04\"" /etc/os-release; then \
         pip install setuptools; \
     fi && \
-    pip install --no-cache-dir -r /workspace/holohub/benchmarks/holoscan_flow_benchmarking/requirements.txt && \
-    hash -r && \
+    # Install required system packages first
     apt-get update && \
     apt-get install -y --no-install-recommends \
+        pkg-config \
         libgstreamer1.0-0 \
         libgstreamer-plugins-base1.0-0 \
         libgles2 \
@@ -141,9 +141,11 @@ RUN && \
         libgirepository1.0-dev \
         gobject-introspection \
         libgtk-3-dev \
-        libcanberra-gtk-module \   
-        openjdk-21-jre &&\
-    echo 'export JREHOME=$(readlink /etc/alternatives/java | sed -e "s/\/bin\/java//")' >> /etc/bash.bashrc  && \        
+        libcanberra-gtk-module \
+        openjdk-21-jre && \
+    pip install --no-cache-dir -r /workspace/holohub/benchmarks/holoscan_flow_benchmarking/requirements.txt && \
+    hash -r && \
+    echo 'export JREHOME=$(readlink /etc/alternatives/java | sed -e "s/\/bin\/java//")' >> /etc/bash.bashrc && \
     rm -rf /var/lib/apt/lists/*
 
 ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data

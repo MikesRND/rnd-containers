@@ -3,8 +3,10 @@
 
 # Container configuration
 IMAGE_NAME := gpu-algo-dev
+CONTAINER_NAME := gpu-algo-dev
 DOCKER_HUB_USER := mikesrnd
 VERSION := $(shell cat VERSION)
+DOCKER_COMPOSE := docker-compose -f docker-compose.yml
 
 # Full image names
 LOCAL_IMAGE := $(IMAGE_NAME):latest
@@ -12,7 +14,7 @@ LOCAL_VERSIONED := $(IMAGE_NAME):$(VERSION)
 HUB_IMAGE := $(DOCKER_HUB_USER)/$(IMAGE_NAME):latest
 HUB_VERSIONED := $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(VERSION)
 
-.PHONY: help build tag push release clean version login
+.PHONY: help build tag push release clean version login shell shell-hub up down logs
 
 help:
 	@echo "Available targets:"
@@ -23,13 +25,18 @@ help:
 	@echo "  clean      - Remove local images"
 	@echo "  version    - Show current version"
 	@echo "  login      - Login to Docker Hub"
+	@echo "  up         - Start the gpu-algo-dev service with docker-compose"
+	@echo "  down       - Stop the gpu-algo-dev service"
+	@echo "  logs       - Show logs from the gpu-algo-dev service"
+	@echo "  shell      - Open an interactive shell in the running container"
+	@echo "  shell-hub  - Open an interactive shell in the Docker Hub container"
 	@echo ""
 	@echo "Current version: $(VERSION)"
 	@echo "Docker Hub user: $(DOCKER_HUB_USER)"
 
 build:
 	@echo "Building container image: $(LOCAL_IMAGE)"
-	docker build -t $(LOCAL_IMAGE) .
+	docker build --build-arg BUILD_SOURCE=local --build-arg BUILD_TIME=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") -t $(LOCAL_IMAGE) .
 	@echo "Build complete: $(LOCAL_IMAGE)"
 
 tag: build
@@ -69,3 +76,19 @@ version:
 login:
 	@echo "Logging in to Docker Hub as $(DOCKER_HUB_USER)"
 	docker login -u $(DOCKER_HUB_USER)
+
+shell:
+	@echo "Opening shell in container via docker-compose"
+	docker exec -it -u $(USER) -w /workspace $(CONTAINER_NAME) /bin/bash
+
+up:
+	@echo "Starting gpu-algo-dev service"
+	USER_ID=$(shell id -u) GROUP_ID=$(shell id -g) USER=$(USER) $(DOCKER_COMPOSE) up -d
+
+down:
+	@echo "Stopping gpu-algo-dev service"
+	$(DOCKER_COMPOSE) down
+
+logs:
+	@echo "Showing logs for gpu-algo-dev service"
+	$(DOCKER_COMPOSE) logs -f

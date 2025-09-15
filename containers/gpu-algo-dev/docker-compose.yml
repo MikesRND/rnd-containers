@@ -10,9 +10,9 @@ services:
         GROUPID: ${GROUP_ID:-1000}
     image: gpu-algo-dev:latest
     container_name: gpu-algo-dev
-    working_dir: /workspace
+    working_dir: /workspace/rnd-containers
     volumes:
-      - ${PROJECT_PATH:-./workspace}:/workspace:cached
+      - .:/workspace/rnd-containers:cached
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
