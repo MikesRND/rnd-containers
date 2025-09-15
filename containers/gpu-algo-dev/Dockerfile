@@ -41,9 +41,7 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 # ----------------------------------------------------
 # Install Core APT Packages
 # ----------------------------------------------------
-RUN pip install --no-cache-dir holoscan-cli && \
-    hash -r && \
-    apt-get update && \
+RUN apt-get update && \ 
     apt-get install -y --no-install-recommends \
         python3-venv \
         build-essential \
@@ -56,6 +54,10 @@ RUN pip install --no-cache-dir holoscan-cli && \
         doxygen \
         graphviz \
         cmake && \
+    pip install --no-cache-dir \
+        holoscan-cli \
+        pytest && \
+    hash -r && \        
     rm -rf /var/lib/apt/lists/*
 
 # ----------------------------------------------------
@@ -144,6 +146,8 @@ RUN true && \
         libcanberra-gtk-module \
         openjdk-21-jre && \
     pip install --no-cache-dir -r /workspace/holohub/benchmarks/holoscan_flow_benchmarking/requirements.txt && \
+    # Pyyaml and scapy are needed for some ADV Network stuff below
+    pip install --no-cache-dir pyyaml scapy &&\
     hash -r && \
     echo 'export JREHOME=$(readlink /etc/alternatives/java | sed -e "s/\/bin\/java//")' >> /etc/bash.bashrc && \
     rm -rf /var/lib/apt/lists/*
@@ -191,6 +195,7 @@ RUN if [ "${TARGETARCH}" = "amd64" ]; then \
 # - python3-pyelftools: used by some mlnx tools
 # - python3-dev: for building python bindings
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        holoscan-networking \        
         libcublas-dev-12-6 \
         libcufft-dev-12-6 \
         libcusolver-dev-12-6 \

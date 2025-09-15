@@ -23,3 +23,4 @@ services:
     tty: true
     stdin_open: true
     entrypoint: ["/entrypoint.sh", "sleep", "infinity"]
+    cpus: "0.5"

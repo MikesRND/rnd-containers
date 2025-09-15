@@ -55,3 +55,13 @@ docker exec -it gpu-algo-dev bash
 cd /workspace
 
 ```
+
+## Holohub example
+
+To build the advanced networking testbench example from Holohub:
+
+```bash
+cd /workspace/holohub
+./holohub build --local adv_networking_testbench --language cpp
+```
+
