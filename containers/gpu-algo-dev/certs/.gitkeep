@@ -1,0 +1,2 @@
+# This directory is for corporate SSL certificates
+# Place .crt files here for installation in container.
