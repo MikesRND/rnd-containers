@@ -2,6 +2,9 @@
 *.log
 .docker/
 
+# Certificates
+certs/
+
 # Build artifacts
 build/
 .output/
