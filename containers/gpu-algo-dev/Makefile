@@ -12,7 +12,7 @@ LOCAL_VERSIONED := $(IMAGE_NAME):$(VERSION)
 HUB_IMAGE := $(DOCKER_HUB_USER)/$(IMAGE_NAME):latest
 HUB_VERSIONED := $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(VERSION)
 
-.PHONY: help build tag push release clean version
+.PHONY: help build tag push release clean version login
 
 help:
 	@echo "Available targets:"
@@ -22,6 +22,7 @@ help:
 	@echo "  release    - Build, tag, and push (full release)"
 	@echo "  clean      - Remove local images"
 	@echo "  version    - Show current version"
+	@echo "  login      - Login to Docker Hub"
 	@echo ""
 	@echo "Current version: $(VERSION)"
 	@echo "Docker Hub user: $(DOCKER_HUB_USER)"
@@ -43,7 +44,7 @@ tag: build
 
 push: tag
 	@echo "Pushing to Docker Hub..."
-	@echo "Note: Make sure you're logged in with 'docker login'"
+	@echo "Note: Make sure you're logged in with 'make login' or 'docker login'"
 	docker push $(HUB_IMAGE)
 	docker push $(HUB_VERSIONED)
 	@echo "Push complete!"
@@ -55,7 +56,7 @@ release: build tag push
 	@echo "Release $(VERSION) complete!"
 
 clean:
-	@echo "Removing local images..."
+	@echo "Removing local and hub-tagged images..."
 	-docker rmi $(LOCAL_IMAGE) 2>/dev/null
 	-docker rmi $(LOCAL_VERSIONED) 2>/dev/null
 	-docker rmi $(HUB_IMAGE) 2>/dev/null
@@ -64,3 +65,7 @@ clean:
 
 version:
 	@echo "$(VERSION)"
+
+login:
+	@echo "Logging in to Docker Hub as $(DOCKER_HUB_USER)"
+	docker login -u $(DOCKER_HUB_USER)
