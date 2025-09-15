@@ -14,7 +14,7 @@ LOCAL_VERSIONED := $(IMAGE_NAME):$(VERSION)
 HUB_IMAGE := $(DOCKER_HUB_USER)/$(IMAGE_NAME):latest
 HUB_VERSIONED := $(DOCKER_HUB_USER)/$(IMAGE_NAME):$(VERSION)
 
-.PHONY: help build tag push release clean version login shell shell-hub up down logs
+.PHONY: help build tag push release clean version login shell shell-hub up down logs pull
 
 help:
 	@echo "Available targets:"
@@ -25,6 +25,7 @@ help:
 	@echo "  clean      - Remove local images"
 	@echo "  version    - Show current version"
 	@echo "  login      - Login to Docker Hub"
+	@echo "  pull       - Pull the latest image from Docker Hub"
 	@echo "  up         - Start the gpu-algo-dev service with docker-compose"
 	@echo "  down       - Stop the gpu-algo-dev service"
 	@echo "  logs       - Show logs from the gpu-algo-dev service"
@@ -92,3 +93,7 @@ down:
 logs:
 	@echo "Showing logs for gpu-algo-dev service"
 	$(DOCKER_COMPOSE) logs -f
+
+pull:
+	@echo "Pulling latest image from Docker Hub"
+	$(DOCKER_COMPOSE) pull

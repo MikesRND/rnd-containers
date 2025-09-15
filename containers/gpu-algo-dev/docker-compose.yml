@@ -8,7 +8,8 @@ services:
         USERNAME: ${USER:-developer}
         USERID: ${USER_ID:-1000}
         GROUPID: ${GROUP_ID:-1000}
-    image: gpu-algo-dev:latest
+    image: mikesrnd/gpu-algo-dev:latest
+    pull_policy: always
     container_name: gpu-algo-dev
     working_dir: /workspace/rnd-containers
     volumes:
