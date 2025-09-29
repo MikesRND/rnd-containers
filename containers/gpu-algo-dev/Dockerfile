@@ -8,8 +8,9 @@ LABEL description="GPU-accelerated development container"
 
 # Copy entrypoint scripts
 COPY scripts/entrypoint.sh /entrypoint.sh
+COPY scripts/setup_workspace_mapping.sh /setup_workspace_mapping.sh
 COPY scripts/nvidia_entrypoint_no_exec.sh /opt/nvidia/nvidia_entrypoint_no_exec.sh
-RUN chmod +x /entrypoint.sh /opt/nvidia/nvidia_entrypoint_no_exec.sh
+RUN chmod +x /entrypoint.sh /setup_workspace_mapping.sh /opt/nvidia/nvidia_entrypoint_no_exec.sh
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

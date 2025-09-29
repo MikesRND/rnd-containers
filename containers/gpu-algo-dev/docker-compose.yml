@@ -1,4 +1,4 @@
-name: gpu-algo-dev
+name: gpu-algo-dev-${USER}
 services:
   gpu-algo-dev:
     build:
@@ -9,11 +9,9 @@ services:
         USERID: ${USER_ID:-1000}
         GROUPID: ${GROUP_ID:-1000}
     image: mikesrnd/gpu-algo-dev:latest
-    pull_policy: always
-    container_name: gpu-algo-dev
-    working_dir: /workspace/rnd-containers
+    pull_policy: missing
     volumes:
-      - .:/workspace/rnd-containers:cached
+      - .:/mnt/current_folder:cached
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all

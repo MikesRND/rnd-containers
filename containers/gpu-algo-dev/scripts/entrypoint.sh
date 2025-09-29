@@ -13,6 +13,14 @@ else
     echo "[entrypoint] WARNING: Modified NVIDIA entrypoint not found at /opt/nvidia/nvidia_entrypoint_no_exec.sh"
 fi
 
+# Setup workspace mapping from /mnt/current_folder to /workspace/<folder_name>
+if [ -f "/setup_workspace_mapping.sh" ]; then
+    source /setup_workspace_mapping.sh
+    setup_workspace_mapping || true
+else
+    echo "[entrypoint] WARNING: Workspace mapping script not found at /setup_workspace_mapping.sh"
+fi
+
 # Read UID/GID/USERNAME or fallback
 USER_NAME=${USERNAME:-developer}
 USER_ID=${USERID:-1000}
@@ -35,7 +43,7 @@ if ! id "$USER_NAME" > /dev/null 2>&1; then
         # UID already exists, need to handle this
         EXISTING_USER=$(id -nu "$USER_ID")
         echo "[entrypoint] UID $USER_ID already exists for user: $EXISTING_USER"
-        
+
         if [ "$EXISTING_USER" != "$USER_NAME" ]; then
             # Rename existing user to desired name (safer than delete/recreate)
             echo "[entrypoint] Renaming existing user $EXISTING_USER to $USER_NAME"
@@ -60,29 +68,40 @@ if ! id "$USER_NAME" > /dev/null 2>&1; then
     fi
 fi
 
-# Fix /workspace permissions if it exists
+# Fix /workspace directory permissions (non-recursive for efficiency)
 if [ -d "/workspace" ]; then
-    echo "[entrypoint] Fixing /workspace permissions for user $USER_NAME ($USER_ID:$GROUP_ID)"
-    chown -R "$USER_ID:$GROUP_ID" /workspace 2>/dev/null || {
-        echo "[entrypoint] WARNING: Could not change /workspace ownership (may need root privileges)"
-    }
+    echo "[entrypoint] Fixing /workspace directory permissions for user $USER_NAME ($USER_ID:$GROUP_ID)"
+    chown "$USER_ID:$GROUP_ID" /workspace 2>/dev/null || true
+
+    # Fix permissions for root-owned files/dirs in /workspace (skip symlinks)
+    for item in /workspace/*; do
+        if [ -e "$item" ] && [ ! -L "$item" ]; then
+            # Check if owned by root
+            if [ "$(stat -c %u "$item")" = "0" ]; then
+                echo "[entrypoint] Fixing permissions for $(basename "$item")"
+                if [ -d "$item" ]; then
+                    chown -R "$USER_ID:$GROUP_ID" "$item" 2>/dev/null || true
+                else
+                    chown "$USER_ID:$GROUP_ID" "$item" 2>/dev/null || true
+                fi
+            fi
+        fi
+    done
 fi
 
-# Switch to the user and change to workspace directory if it exists
-WORKSPACE_DIR="/workspace/gpu-algorithms"
-if [ -d "$WORKSPACE_DIR" ]; then
-    WORK_DIR="$WORKSPACE_DIR"
-else
-    WORK_DIR="/home/$USER_NAME"
-fi
+# Set working directory for commands
+WORK_DIR="/workspace"
 
 if [ $# -eq 0 ]; then
     # No command provided, start interactive bash
+    echo "[entrypoint] Launching interactive shell for $USER_NAME in $WORK_DIR"
     exec su - "$USER_NAME" -c "cd '$WORK_DIR' && exec bash"
 elif [ "$1" = "sleep" ] && [ "$2" = "infinity" ]; then
     # Handle sleep infinity command specially for container persistence
+    echo "[entrypoint] Keeping container alive with sleep infinity (workdir: $WORK_DIR)"
     exec su - "$USER_NAME" -c "cd '$WORK_DIR' && exec sleep infinity"
 else
     # Command provided, execute it
+    echo "[entrypoint] Executing command as $USER_NAME in $WORK_DIR: $*"
     exec su - "$USER_NAME" -c "cd '$WORK_DIR' && exec \"\$@\"" -- "$@"
 fi
