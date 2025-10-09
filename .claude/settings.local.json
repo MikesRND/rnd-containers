@@ -19,7 +19,8 @@
       "Bash(docker compose:*)",
       "Bash(docker build:*)",
       "Bash(cmake:*)",
-      "Bash(env)"
+      "Bash(env)",
+      "Bash(REGISTRY=ghcr.io IMAGE_NAMESPACE=test IMAGE_NAME=myimage make container-dev-help)"
     ],
     "deny": [],
     "ask": []

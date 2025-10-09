@@ -48,22 +48,33 @@ make container-pull        # Pull the latest image from Docker Hub
 #### Build Commands
 ```bash
 make container-build        # Build with SEMVER-COMMIT and SEMVER tags
-                            # e.g., 0.0.5-abc1234 and 0.0.5
+                            # e.g., 0.0.6-abc1234 and 0.0.6
                             # Does NOT tag as :latest
 
-make container-tag-latest   # Tag existing build as :latest
+make container-tag-latest   # Tag existing build as :latest (local only)
                             # WARNING: CI/CD use only!
 
 make container-version      # Show current version, commit, branch, and tag info
 make container-clean        # Remove local images
 ```
 
-#### Release Workflow
+#### Release Workflows
+
+**Automated Release (Recommended):**
 ```bash
 make container-release      # Push versioned images to Docker Hub
                             # Must be on clean main branch
                             # Pushes: SEMVER-COMMIT and SEMVER tags
                             # NOTE: :latest tag only pushed via CI/CD
+```
+
+**Manual Latest Push (Emergency/Testing):**
+```bash
+make container-login        # Login to Docker Hub
+make container-push-latest  # Build, tag as :latest, and push ALL tags
+                            # WARNING: Bypasses CI/CD
+                            # Interactive confirmation required
+                            # Pushes: SEMVER-COMMIT, SEMVER, and :latest
 ```
 
 ### Image Tagging Strategy
@@ -114,7 +125,7 @@ make container-build
 make container-version
 
 # Override image tag for docker-compose
-export IMAGE_TAG=0.0.5-abc1234
+export IMAGE_TAG=0.0.6-abc1234
 make container-up
 
 # Access the container
@@ -123,6 +134,29 @@ make container-shell
 # Your code is mounted at /mnt/current_folder
 cd /mnt/current_folder
 ```
+
+### Using a Different Registry
+
+To use a different registry (e.g., GitHub Container Registry):
+
+```bash
+# Set registry and namespace
+export REGISTRY=ghcr.io
+export IMAGE_NAMESPACE=myorg
+export IMAGE_NAME=gpu-algo-dev
+
+# Build and tag
+make container-build
+
+# Or use with docker-compose
+make container-up
+```
+
+All registry configuration variables:
+- `REGISTRY` - Container registry (default: `docker.io`)
+- `IMAGE_NAMESPACE` - Namespace/organization (default: `mikesrnd`)
+- `IMAGE_NAME` - Image name (default: `gpu-algo-dev`)
+- `IMAGE_TAG` - Version tag (auto-generated or override)
 
 ## Holohub example
 
