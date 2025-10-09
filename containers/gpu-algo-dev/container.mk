@@ -1,5 +1,16 @@
 # Lightweight container helpers for user workflows
-DOCKER_COMPOSE ?= docker compose -f docker-compose.yml
+#
+# =============================================================================
+# CONFIGURE FOR YOUR PROJECT
+#   Update DOCKER_COMPOSE_FILE to point to your docker-compose.yml file
+#   Update DOCKER_SERVICE_NAME to the service name in your docker-compose.yml
+# =============================================================================
+DOCKER_COMPOSE_FILE ?= docker-compose.yml
+DOCKER_SERVICE_NAME ?= gpu-algo-dev
+# =============================================================================
+
+
+DOCKER_COMPOSE ?= docker compose -f $(DOCKER_COMPOSE_FILE)
 
 .PHONY: container-help container-pull container-up container-down container-shell container-shell-root container-logs container-restart
 
@@ -23,10 +34,10 @@ container-down:
 	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(DOCKER_COMPOSE) down
 
 container-shell:
-	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(DOCKER_COMPOSE) exec --user $$(id -u):$$(id -g) gpu-algo-dev bash
+	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(DOCKER_COMPOSE) exec --user $$(id -u):$$(id -g) $(DOCKER_SERVICE_NAME) bash
 
 container-shell-root:
-	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(DOCKER_COMPOSE) exec gpu-algo-dev bash
+	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(DOCKER_COMPOSE) exec $(DOCKER_SERVICE_NAME) bash
 
 container-logs:
 	@$(DOCKER_COMPOSE) logs -f

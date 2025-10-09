@@ -20,7 +20,19 @@
       "Bash(docker build:*)",
       "Bash(cmake:*)",
       "Bash(env)",
-      "Bash(REGISTRY=ghcr.io IMAGE_NAMESPACE=test IMAGE_NAME=myimage make container-dev-help)"
+      "Bash(REGISTRY=ghcr.io IMAGE_NAMESPACE=test IMAGE_NAME=myimage make container-dev-help)",
+      "Bash(./cdo ls)",
+      "Bash(./cdo -d)",
+      "Bash(./cdo -u ls)",
+      "Bash(./cdo ls -la)",
+      "Bash(./cdo -u)",
+      "Bash(chmod:*)",
+      "Bash(./cdo_examples.sh)",
+      "Bash(DOCKER_SERVICE_NAME=test-service make -n container-shell)",
+      "Bash(DOCKER_COMPOSE=\"docker compose -f /custom/path/docker-compose.yml\" make -n container-shell)",
+      "Bash(DOCKER_COMPOSE_FILE=/tmp/test.yml make -n container-up)",
+      "Bash(DOCKER_COMPOSE_FILE=/tmp/test.yml ./cdo --help)",
+      "Bash(DOCKER_COMPOSE_FILE=custom-compose.yml bash -c 'source <(grep \"\"^DOCKER_COMPOSE\"\" ./cdo | head -2); echo \"\"$DOCKER_COMPOSE\"\"')"
     ],
     "deny": [],
     "ask": []

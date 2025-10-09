@@ -4,12 +4,16 @@
 # A script to run commands inside a Docker development container,
 # handling special characters and interactive modes properly.
 #
-# Adjust the DOCKER_SERVICE_NAME to match your docker-compose service name.
-DOCKER_SERVICE_NAME="dev"
-
 set -euo pipefail
 
-DOCKER_COMPOSE=${DOCKER_COMPOSE:-docker-compose}
+# =============================================================================
+# CONFIGURE THIS SCRIPT FOR YOUR PROJECT
+#   Update DOCKER_COMPOSE_FILE to point to your docker-compose.yml file
+#   Update DOCKER_SERVICE_NAME to the service name in your docker-compose.yml
+# =============================================================================
+DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE:-docker-compose.yml}
+DOCKER_SERVICE_NAME=${DOCKER_SERVICE_NAME:-gpu-algo-dev}
+# =============================================================================
 
 show_usage() {
     cat <<EOF
@@ -19,16 +23,20 @@ Execute a command inside the Docker development container with proper handling o
 Similar to 'sudo' but runs commands in the container environment instead of as root.
 
 OPTIONS:
-    -h, --help       Show this help message
-    -s, --shell      Enter interactive shell (ignore COMMAND)
+    -h, --help         Show this help message
+    -u, --up           Start the container if not running (implies wait for start)
+    -d, --down         Stop the container and exit
+    -s, --shell        Enter interactive shell (ignore COMMAND)
     -i, --interactive  Force interactive mode (allocate a TTY)
-    -n, --no-tty     Force non-interactive mode (no TTY)
-    -u, --user USER  Override user (default: current user)
-    -w, --workdir DIR  Override working directory
+    -n, --no-tty       Force non-interactive mode (no TTY)
+    -U, --user USER    Override user (default: current user)
+    -W, --workdir DIR  Override working directory
     -e, --env VAR=VALUE  Set environment variable
 
 EXAMPLES:
-    $0 -s    # Enter an interactive shell
+    $0 -s              # Enter an interactive shell
+    $0 -u -s           # Start container if needed, then enter shell
+    $0 -d              # Stop the container
     $0 ls -la
     $0 echo "Hello World"
     $0 bash -c 'echo \$HOME'
@@ -36,8 +44,13 @@ EXAMPLES:
     $0 python -c "print('Hello')"
     $0 find . -name "*.txt" -exec echo {} \\;
 
+    # Override service name for different projects
+    DOCKER_SERVICE_NAME=myservice $0 ls
+
 EOF
 }
+
+DOCKER_COMPOSE=${DOCKER_COMPOSE:-docker compose -f "$DOCKER_COMPOSE_FILE"}
 
 is_container_running() {
     $DOCKER_COMPOSE ps -q "$DOCKER_SERVICE_NAME" 2>/dev/null | grep -q .
@@ -49,11 +62,22 @@ USER_OVERRIDE=""
 WORKDIR_OVERRIDE=""
 ENV_VARS=()
 SHELL_MODE=false
+START_CONTAINER=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -h|--help)
             show_usage
+            exit 0
+            ;;
+        -u|--up)
+            START_CONTAINER=true
+            shift
+            ;;
+        -d|--down)
+            echo "Stopping container '$DOCKER_SERVICE_NAME'..." >&2
+            $DOCKER_COMPOSE down "$DOCKER_SERVICE_NAME"
+            echo "Container stopped." >&2
             exit 0
             ;;
         -s|--shell)
@@ -70,11 +94,11 @@ while [[ $# -gt 0 ]]; do
             TTY_EXPLICIT=true
             shift
             ;;
-        -u|--user)
+        -U|--user)
             USER_OVERRIDE="$2"
             shift 2
             ;;
-        -w|--workdir)
+        -W|--workdir)
             WORKDIR_OVERRIDE="$2"
             shift 2
             ;;
@@ -92,15 +116,40 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ $# -eq 0 && "$SHELL_MODE" == false ]]; then
+if [[ $# -eq 0 && "$SHELL_MODE" == false && "$START_CONTAINER" == false ]]; then
     show_usage
     exit 0
 fi
 
 if ! is_container_running; then
-    echo "Error: Container '$DOCKER_SERVICE_NAME' is not running" >&2
-    echo "Start it with: make up" >&2
-    exit 1
+    if [[ "$START_CONTAINER" == true ]]; then
+        echo "Starting container '$DOCKER_SERVICE_NAME'..." >&2
+        USER_ID=$(id -u) GROUP_ID=$(id -g) USER=${USER:-developer} $DOCKER_COMPOSE up -d "$DOCKER_SERVICE_NAME"
+
+        # Wait for container to be ready
+        echo "Waiting for container to be ready..." >&2
+        for i in {1..30}; do
+            if is_container_running; then
+                echo "Container is ready!" >&2
+                break
+            fi
+            if [[ $i -eq 30 ]]; then
+                echo "Error: Container failed to start within 30 seconds" >&2
+                exit 1
+            fi
+            sleep 1
+        done
+
+        # If -u was used without a command, just exit after starting
+        if [[ $# -eq 0 && "$SHELL_MODE" == false ]]; then
+            exit 0
+        fi
+    else
+        echo "Error: Container '$DOCKER_SERVICE_NAME' is not running" >&2
+        echo "Start it with: $0 --up" >&2
+        echo "Or use docker compose: USER_ID=\$(id -u) GROUP_ID=\$(id -g) $DOCKER_COMPOSE up -d" >&2
+        exit 1
+    fi
 fi
 
 if [[ "$TTY_EXPLICIT" != true ]]; then
