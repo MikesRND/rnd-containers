@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(apt-cache:*)",
+      "Read(//usr/src/**)",
+      "WebSearch",
+      "Bash(docker images:*)",
+      "Bash(docker run:*)",
+      "Read(//workspace/**)",
+      "Bash(docker-compose:*)",
+      "Bash(make:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(docker exec:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(docker compose logs:*)",
+      "Bash(docker compose exec:*)",
+      "Read(//home/mikesrnd/gh/mikesRND/**)",
+      "Bash(USER_ID=1000 GROUP_ID=1000 docker compose -f rnd-containers/containers/gpu-algo-dev/docker-compose.yml up -d)",
+      "Bash(docker compose:*)",
+      "Bash(docker build:*)",
+      "Bash(cmake:*)",
+      "Bash(env)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

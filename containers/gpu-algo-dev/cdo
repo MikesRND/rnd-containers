@@ -1,0 +1,145 @@
+#!/bin/bash
+#
+# cdo: Container "Do" command
+# A script to run commands inside a Docker development container,
+# handling special characters and interactive modes properly.
+#
+# Adjust the DOCKER_SERVICE_NAME to match your docker-compose service name.
+DOCKER_SERVICE_NAME="dev"
+
+set -euo pipefail
+
+DOCKER_COMPOSE=${DOCKER_COMPOSE:-docker-compose}
+
+show_usage() {
+    cat <<EOF
+Usage: $0 [OPTIONS] [COMMAND [ARGS...]]
+
+Execute a command inside the Docker development container with proper handling of special characters.
+Similar to 'sudo' but runs commands in the container environment instead of as root.
+
+OPTIONS:
+    -h, --help       Show this help message
+    -s, --shell      Enter interactive shell (ignore COMMAND)
+    -i, --interactive  Force interactive mode (allocate a TTY)
+    -n, --no-tty     Force non-interactive mode (no TTY)
+    -u, --user USER  Override user (default: current user)
+    -w, --workdir DIR  Override working directory
+    -e, --env VAR=VALUE  Set environment variable
+
+EXAMPLES:
+    $0 -s    # Enter an interactive shell
+    $0 ls -la
+    $0 echo "Hello World"
+    $0 bash -c 'echo \$HOME'
+    $0 grep "pattern with spaces" file.txt
+    $0 python -c "print('Hello')"
+    $0 find . -name "*.txt" -exec echo {} \\;
+
+EOF
+}
+
+is_container_running() {
+    $DOCKER_COMPOSE ps -q "$DOCKER_SERVICE_NAME" 2>/dev/null | grep -q .
+}
+
+INTERACTIVE=""
+TTY_EXPLICIT=false
+USER_OVERRIDE=""
+WORKDIR_OVERRIDE=""
+ENV_VARS=()
+SHELL_MODE=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        -s|--shell)
+            SHELL_MODE=true
+            shift
+            ;;
+        -i|--interactive)
+            INTERACTIVE="-it"
+            TTY_EXPLICIT=true
+            shift
+            ;;
+        -n|--no-tty)
+            INTERACTIVE="-T"
+            TTY_EXPLICIT=true
+            shift
+            ;;
+        -u|--user)
+            USER_OVERRIDE="$2"
+            shift 2
+            ;;
+        -w|--workdir)
+            WORKDIR_OVERRIDE="$2"
+            shift 2
+            ;;
+        -e|--env)
+            ENV_VARS+=("-e" "$2")
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [[ $# -eq 0 && "$SHELL_MODE" == false ]]; then
+    show_usage
+    exit 0
+fi
+
+if ! is_container_running; then
+    echo "Error: Container '$DOCKER_SERVICE_NAME' is not running" >&2
+    echo "Start it with: make up" >&2
+    exit 1
+fi
+
+if [[ "$TTY_EXPLICIT" != true ]]; then
+    if [[ -t 0 && -t 1 ]]; then
+        INTERACTIVE="-it"
+    fi
+fi
+
+USER_SPEC=("--user" "$(id -u):$(id -g)")
+if [[ -n "$USER_OVERRIDE" ]]; then
+    USER_SPEC=("--user" "$USER_OVERRIDE")
+fi
+
+WORKDIR_SPEC=()
+if [[ -n "$WORKDIR_OVERRIDE" ]]; then
+    WORKDIR_SPEC=("--workdir" "$WORKDIR_OVERRIDE")
+fi
+
+if [[ "$SHELL_MODE" == true ]]; then
+    exec $DOCKER_COMPOSE exec \
+        $INTERACTIVE \
+        "${USER_SPEC[@]}" \
+        "${WORKDIR_SPEC[@]}" \
+        "${ENV_VARS[@]}" \
+        "$DOCKER_SERVICE_NAME" \
+        bash
+else
+    ESCAPED_ARGS=()
+    for arg in "$@"; do
+        ESCAPED_ARGS+=("$(printf '%q' "$arg")")
+    done
+
+    COMMAND_STRING="${ESCAPED_ARGS[*]}"
+
+    exec $DOCKER_COMPOSE exec \
+        $INTERACTIVE \
+        "${USER_SPEC[@]}" \
+        "${WORKDIR_SPEC[@]}" \
+        "${ENV_VARS[@]}" \
+        "$DOCKER_SERVICE_NAME" \
+        bash -c "$COMMAND_STRING"
+fi

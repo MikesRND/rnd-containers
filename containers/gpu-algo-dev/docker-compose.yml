@@ -8,7 +8,12 @@ services:
         USERNAME: ${USER:-developer}
         USERID: ${USER_ID:-1000}
         GROUPID: ${GROUP_ID:-1000}
-    image: mikesrnd/gpu-algo-dev:latest
+    # Image tag can be overridden via IMAGE_TAG environment variable
+    # Examples:
+    #   IMAGE_TAG=latest (use latest stable)
+    #   IMAGE_TAG=0.0.5-abc1234 (use specific version+commit)
+    # Default: latest (for convenience when pulling from Docker Hub)
+    image: mikesrnd/gpu-algo-dev:${IMAGE_TAG:-latest}
     pull_policy: missing
     volumes:
       - .:/mnt/current_folder:cached

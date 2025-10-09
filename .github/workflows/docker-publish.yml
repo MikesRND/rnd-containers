@@ -1,58 +1,115 @@
 name: Docker Hub Publish
 
 on:
+  # Trigger on PR merge to main branch
   push:
+    branches:
+      - main
+    paths:
+      - 'containers/gpu-algo-dev/**'
+      - '.github/workflows/docker-publish.yml'
     tags:
       - 'v*'
       - 'gpu-algo-dev-v*'
+  # Manual trigger for testing or special builds
   workflow_dispatch:
     inputs:
       container:
         description: 'Container to build (e.g., gpu-algo-dev)'
         required: true
         default: 'gpu-algo-dev'
-      version:
-        description: 'Version tag'
-        required: true
-        default: 'latest'
+      tag_as_latest:
+        description: 'Tag as latest'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
+      with:
+        fetch-depth: 0  # Full history for accurate git info
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
-    
+
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/gpu-algo-dev
-        tags: |
-          type=ref,event=tag
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
-          type=semver,pattern={{major}}
-          type=raw,value=latest,enable={{is_default_branch}}
-    
+
+    - name: Extract version info using Make
+      id: version
+      working-directory: containers/gpu-algo-dev
+      run: |
+        # Use centralized version.mk for all version information
+        SEMVER=$(make version-semver)
+        echo "semver=${SEMVER}" >> $GITHUB_OUTPUT
+
+        COMMIT=$(make version-commit)
+        echo "commit_hash=${COMMIT}" >> $GITHUB_OUTPUT
+
+        VERSION_FULL=$(make version-full)
+        echo "version_full=${VERSION_FULL}" >> $GITHUB_OUTPUT
+
+        # Determine if we should tag as latest
+        if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.event.inputs.tag_as_latest }}" = "true" ]; then
+          echo "tag_latest=true" >> $GITHUB_OUTPUT
+        else
+          echo "tag_latest=false" >> $GITHUB_OUTPUT
+        fi
+
+        echo "Building version: ${VERSION_FULL}"
+        make version-info
+
+    - name: Generate Docker tags using Make
+      id: tags
+      working-directory: containers/gpu-algo-dev
+      run: |
+        # Use Make targets to ensure consistency with local builds
+        if [ "${{ steps.version.outputs.tag_latest }}" = "true" ]; then
+          TAGS=$(make version-docker-tags-with-latest)
+          echo "Including :latest tag"
+        else
+          TAGS=$(make version-docker-tags)
+        fi
+
+        echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+        echo "Docker tags: ${TAGS}"
+
     - name: Build and push gpu-algo-dev container
       uses: docker/build-push-action@v4
       with:
         context: ./containers/gpu-algo-dev
         file: ./containers/gpu-algo-dev/Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ steps.tags.outputs.tags }}
+        labels: |
+          org.opencontainers.image.version=${{ steps.version.outputs.semver }}
+          org.opencontainers.image.revision=${{ steps.version.outputs.commit_hash }}
+          org.opencontainers.image.created=${{ github.event.repository.updated_at }}
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
+        build-args: |
+          BUILD_SOURCE=github-actions
+          BUILD_TIME=${{ github.event.repository.updated_at }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Image digest and tags
+      run: |
+        echo "### Docker Image Published :rocket:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Tags:**" >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**SEMVER:** ${{ steps.version.outputs.semver }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ steps.version.outputs.commit_hash }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Full Version:** ${{ steps.version.outputs.version_full }}" >> $GITHUB_STEP_SUMMARY

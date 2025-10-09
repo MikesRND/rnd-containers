@@ -32,28 +32,96 @@ docker exec -it gpu-algo-dev bash
 
 ## Available Commands
 
-### Makefile Targets
+### Container Management (User Workflow)
 ```bash
-make help     # Show available targets
-make build    # Build the container image
-make tag      # Tag with version and Docker Hub namespace
-make push     # Push to Docker Hub (requires docker login)
-make release  # Build, tag, and push (full release)
-make clean    # Remove local images
-make version  # Show current version
+make help                  # Show all available commands
+make container-up          # Start the container
+make container-down        # Stop the container
+make container-shell       # Open shell in running container (as user)
+make container-shell-root  # Open shell in running container (as root)
+make container-logs        # View container logs
+make container-pull        # Pull the latest image from Docker Hub
 ```
 
-### Development Workflow
+### Container Build & Release (Developer Workflow)
+
+#### Build Commands
 ```bash
-# Start development environment
-docker-compose up -d
+make container-build        # Build with SEMVER-COMMIT and SEMVER tags
+                            # e.g., 0.0.5-abc1234 and 0.0.5
+                            # Does NOT tag as :latest
+
+make container-tag-latest   # Tag existing build as :latest
+                            # WARNING: CI/CD use only!
+
+make container-version      # Show current version, commit, branch, and tag info
+make container-clean        # Remove local images
+```
+
+#### Release Workflow
+```bash
+make container-release      # Push versioned images to Docker Hub
+                            # Must be on clean main branch
+                            # Pushes: SEMVER-COMMIT and SEMVER tags
+                            # NOTE: :latest tag only pushed via CI/CD
+```
+
+### Image Tagging Strategy
+
+**Development Builds** (local - `make container-build`):
+- Tags created: `SEMVER-COMMIT_HASH` and `SEMVER`
+  - e.g., `mikesrnd/gpu-algo-dev:0.0.5-abc1234` and `mikesrnd/gpu-algo-dev:0.0.5`
+- Single build, multiple tags (no rebuild needed)
+- Does NOT include `:latest` tag
+
+**Production Builds** (CI/CD on main branch):
+- Tags created: `SEMVER-COMMIT_HASH`, `SEMVER`, and `:latest`
+  - e.g., `0.0.5-abc1234`, `0.0.5`, `latest`
+- Triggered automatically when PR is merged to main
+- Single build with all three tags applied simultaneously
+- GitHub Actions workflow publishes to Docker Hub
+
+**Why this matters:**
+- Every build is traceable to exact commit via SEMVER-COMMIT_HASH tag
+- SEMVER tag (semantic version like 1.2.3) allows easy reference to latest patch of a version
+- `:latest` tag only updated via CI/CD on main branch
+- No separate rebuilds for different tags - same image, multiple references
+- No accidental overwrites of production `:latest` from local machines
+
+### Development Workflow
+
+#### Using Pre-built Images
+```bash
+# Pull specific version
+IMAGE_TAG=0.0.5-abc1234 make container-pull
+
+# Or pull latest stable
+make container-pull  # defaults to :latest
+
+# Start container
+make container-up
 
 # Access the container
-docker exec -it gpu-algo-dev bash
+make container-shell
+```
 
-# Your code is mounted at /workspace
-cd /workspace
+#### Local Development Build
+```bash
+# Build local version (tagged with your current commit)
+make container-build
 
+# Check what tag will be used
+make container-version
+
+# Override image tag for docker-compose
+export IMAGE_TAG=0.0.5-abc1234
+make container-up
+
+# Access the container
+make container-shell
+
+# Your code is mounted at /mnt/current_folder
+cd /mnt/current_folder
 ```
 
 ## Holohub example
