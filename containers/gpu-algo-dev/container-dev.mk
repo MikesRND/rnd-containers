@@ -19,7 +19,7 @@ BUILD_SOURCE ?= local
 IMAGE_TAG := $(VER_VERSION_FULL)
 BUILD_TIME_ISO8601 := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-.PHONY: container-dev-help container-build container-tag-latest container-push-latest container-release container-clean container-version container-login version-docker-tags version-docker-labels
+.PHONY: container-dev-help container-build container-tag-latest container-push-latest container-release container-clean container-version container-login container-tags container-labels
 
 container-dev-help:
 	@echo "Container Build & Publish Commands:"
@@ -38,8 +38,8 @@ container-dev-help:
 	@echo "  IMAGE_FULL:      $(IMAGE_FULL)"
 	@echo ""
 	@echo "Docker Version Targets (for CI/CD):"
-	@echo "  version-docker-tags     - Print comma-separated Docker tags"
-	@echo "  version-docker-labels   - Print Docker OCI labels"
+	@echo "  container-tags          - Print comma-separated Docker tags"
+	@echo "  container-labels        - Print Docker OCI labels"
 	@echo ""
 	@echo "Current build will tag as: $(IMAGE_FULL):$(IMAGE_TAG) and $(IMAGE_FULL):$(VER_SEMVER)"
 
@@ -128,13 +128,13 @@ container-version: version-info
 	@echo "  IMAGE_FULL:   $(IMAGE_FULL)"
 
 # Docker-specific version targets for CI/CD
-version-docker-tags:
+container-tags:
 	@echo "$(IMAGE_FULL):$(IMAGE_TAG),$(IMAGE_FULL):$(VER_SEMVER)"
 
-version-docker-tags-with-latest:
+container-tags-with-latest:
 	@echo "$(IMAGE_FULL):$(IMAGE_TAG),$(IMAGE_FULL):$(VER_SEMVER),$(IMAGE_FULL):latest"
 
-version-docker-labels:
+container-labels:
 	@echo "org.opencontainers.image.version=$(VER_SEMVER)"
 	@echo "org.opencontainers.image.revision=$(VER_GIT_COMMIT)"
 	@echo "org.opencontainers.image.created=$(BUILD_TIME_ISO8601)"

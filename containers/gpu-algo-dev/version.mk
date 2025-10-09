@@ -8,12 +8,12 @@
 #   - git diff-index --quiet HEAD -- (for dirty detection)
 #
 # Provides version variables (exported with VER_ prefix):
-#   VER_SEMVER        - semantic version from VERSION file (e.g., "1.2.3")
+#   VER_SEMVER        - semantic version from VERSION file (e.g., "0.1.0")
 #   VER_GIT_COMMIT    - short git commit hash (e.g., "abc1234")
 #   VER_GIT_BRANCH    - current git branch (e.g., "main")
 #   VER_BUILD_TIME    - ISO 8601 timestamp (e.g., "2025-01-15 10:30:00")
 #   VER_GIT_DIRTY     - "-dirty" if working tree has changes, "" otherwise
-#   VER_VERSION_FULL  - complete version string (e.g., "1.2.3-abc1234-dirty")
+#   VER_VERSION_FULL  - complete version string (e.g., "0.1.0-abc1234-dirty")
 #
 # Provides targets:
 #   version-info       - print all version information
@@ -47,16 +47,18 @@ export VER_GIT_DIRTY
 export VER_VERSION_FULL
 
 # Phony targets for querying version information
-.PHONY: version version-info version-semver version-commit version-branch version-full version-build-time
+.PHONY: version version-info version-semver version-commit version-branch version-full version-build-time version-json version-validate
 
 version:
 	@echo "Version Management Targets:"
 	@echo "  version-info       - Show all version information"
-	@echo "  version-semver     - Print semantic version (e.g., 1.2.3)"
+	@echo "  version-semver     - Print semantic version (e.g., 0.1.0)"
 	@echo "  version-commit     - Print git commit hash (e.g., abc1234)"
 	@echo "  version-branch     - Print git branch (e.g., main)"
-	@echo "  version-full       - Print complete version string (e.g., 1.2.3-abc1234-dirty)"
+	@echo "  version-full       - Print complete version string (e.g., 0.1.0-abc1234-dirty)"
 	@echo "  version-build-time - Print build timestamp"
+	@echo "  version-json       - Output version info as JSON"
+	@echo "  version-validate   - Validate semantic version format"
 	@echo ""
 	@echo "Current version: $(VER_VERSION_FULL)"
 
@@ -83,3 +85,16 @@ version-info:
 	@echo "  VER_BUILD_TIME:   $(VER_BUILD_TIME)"
 	@echo "  VER_GIT_DIRTY:    $(VER_GIT_DIRTY)"
 	@echo "  VER_VERSION_FULL: $(VER_VERSION_FULL)"
+
+version-json:
+	@echo '{"semver":"$(VER_SEMVER)","commit":"$(VER_GIT_COMMIT)","branch":"$(VER_GIT_BRANCH)","build_time":"$(VER_BUILD_TIME)","dirty":"$(VER_GIT_DIRTY)","full":"$(VER_VERSION_FULL)"}'
+
+version-validate:
+	@if echo "$(VER_SEMVER)" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$$'; then \
+		echo "✓ Version $(VER_SEMVER) is valid semantic version"; \
+	else \
+		echo "✗ Version $(VER_SEMVER) is NOT a valid semantic version" >&2; \
+		echo "  Expected format: MAJOR.MINOR.PATCH[-PRERELEASE][+BUILD]" >&2; \
+		echo "  Examples: 0.1.0, 0.1.0-alpha, 0.1.0-beta.1, 0.1.0+build.123" >&2; \
+		exit 1; \
+	fi

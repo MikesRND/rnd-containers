@@ -73,10 +73,10 @@ jobs:
       run: |
         # Use Make targets to ensure consistency with local builds
         if [ "${{ steps.version.outputs.tag_latest }}" = "true" ]; then
-          TAGS=$(make version-docker-tags-with-latest)
+          TAGS=$(make container-tags-with-latest)
           echo "Including :latest tag"
         else
-          TAGS=$(make version-docker-tags)
+          TAGS=$(make container-tags)
         fi
 
         echo "tags=${TAGS}" >> $GITHUB_OUTPUT
