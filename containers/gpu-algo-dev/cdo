@@ -52,6 +52,17 @@ EOF
 
 DOCKER_COMPOSE=${DOCKER_COMPOSE:-docker compose -f "$DOCKER_COMPOSE_FILE"}
 
+# Check if we're already inside a container
+is_inside_container() {
+    # Check for /.dockerenv file (common indicator)
+    [[ -f /.dockerenv ]] && return 0
+
+    # Check if running in a container via cgroup
+    [[ -f /proc/1/cgroup ]] && grep -q docker /proc/1/cgroup && return 0
+
+    return 1
+}
+
 is_container_running() {
     $DOCKER_COMPOSE ps -q "$DOCKER_SERVICE_NAME" 2>/dev/null | grep -q .
 }
@@ -119,6 +130,20 @@ done
 if [[ $# -eq 0 && "$SHELL_MODE" == false && "$START_CONTAINER" == false ]]; then
     show_usage
     exit 0
+fi
+
+# If already inside the container, execute the command directly
+if is_inside_container; then
+    if [[ "$SHELL_MODE" == true ]]; then
+        # Already in container, just start a shell
+        exec bash
+    elif [[ $# -gt 0 ]]; then
+        # Execute the command directly
+        exec "$@"
+    else
+        # No command provided and already inside
+        exit 0
+    fi
 fi
 
 if ! is_container_running; then
