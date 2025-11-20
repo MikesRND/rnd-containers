@@ -42,7 +42,7 @@ ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 # ----------------------------------------------------
 # Install Core APT Packages
 # ----------------------------------------------------
-RUN apt-get update && \ 
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         python3-venv \
         build-essential \
@@ -50,6 +50,9 @@ RUN apt-get update && \
         wget \
         curl \
         clang-format \
+        clang-tidy \
+        lcov \
+        ccache \
         libboost-all-dev \
         libpoco-dev \
         doxygen \
@@ -155,7 +158,15 @@ RUN true && \
 
 ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 
-# ----------------------------------------------------    
+# ----------------------------------------------------
+# External C++ Libraries
+# ----------------------------------------------------
+RUN cd /workspace && \
+    git clone --branch main --depth 1 https://github.com/MikesRND/vrtio.git && \
+    echo "vrtio C++20 header-only library installed at /workspace/vrtio" && \
+    ls -la /workspace/vrtio/
+
+# ----------------------------------------------------
 # Advanced Network Stuff
 # ----------------------------------------------------
 ARG TARGETARCH="amd64"
