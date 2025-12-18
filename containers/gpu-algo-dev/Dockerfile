@@ -60,7 +60,10 @@ RUN apt-get update && \
         cmake && \
     pip install --no-cache-dir \
         holoscan-cli \
-        pytest && \
+        pytest \
+        PyQt6 \
+        pyqtgraph \
+        scipy && \
     hash -r && \        
     rm -rf /var/lib/apt/lists/*
 
@@ -159,12 +162,12 @@ RUN true && \
 ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 
 # ----------------------------------------------------
-# External C++ Libraries
+# External C++ Libraries & Python Bindings
 # ----------------------------------------------------
 RUN cd /workspace && \
-    git clone --branch main --depth 1 https://github.com/MikesRND/vrtio.git && \
-    echo "vrtio C++20 header-only library installed at /workspace/vrtio" && \
-    ls -la /workspace/vrtio/
+    git clone --branch main --depth 1 https://github.com/MikesRND/vrtigo.git && \
+    pip install --no-cache-dir -e /workspace/vrtigo/bindings/python && \
+    echo "vrtigo installed at /workspace/vrtigo (C++ headers + Python bindings in editable mode)"
 
 # ----------------------------------------------------
 # Advanced Network Stuff
