@@ -32,7 +32,8 @@
       "Bash(DOCKER_COMPOSE=\"docker compose -f /custom/path/docker-compose.yml\" make -n container-shell)",
       "Bash(DOCKER_COMPOSE_FILE=/tmp/test.yml make -n container-up)",
       "Bash(DOCKER_COMPOSE_FILE=/tmp/test.yml ./cdo --help)",
-      "Bash(DOCKER_COMPOSE_FILE=custom-compose.yml bash -c 'source <(grep \"\"^DOCKER_COMPOSE\"\" ./cdo | head -2); echo \"\"$DOCKER_COMPOSE\"\"')"
+      "Bash(DOCKER_COMPOSE_FILE=custom-compose.yml bash -c 'source <(grep \"\"^DOCKER_COMPOSE\"\" ./cdo | head -2); echo \"\"$DOCKER_COMPOSE\"\"')",
+      "WebFetch(domain:catalog.ngc.nvidia.com)"
     ],
     "deny": [],
     "ask": []
