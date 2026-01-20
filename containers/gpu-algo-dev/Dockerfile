@@ -1,6 +1,6 @@
 # NVIDIA Clara Holoscan GPU Development Container
 # Based on NVIDIA Clara Holoscan SDK with GPU support for scientific computing
-FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.6.0-dgpu
+FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.10.0-cuda12-dgpu
 
 # Labels for Docker Hub
 LABEL maintainer="mikesrnd"
@@ -129,7 +129,7 @@ RUN mkdir -p /tmp/builds /usr/local/share/cpm-cache && \
 RUN true && \
     # Clone holohub into workspace
     cd /workspace && \
-    git clone --branch holoscan-sdk-3.6.0 --depth 1 https://github.com/nvidia-holoscan/holohub.git && \
+    git clone --branch holoscan-sdk-3.10.0 --depth 1 https://github.com/nvidia-holoscan/holohub.git && \
     # Run holohub setup
     chmod +x /workspace/holohub/holohub && \
     /workspace/holohub/holohub setup && \

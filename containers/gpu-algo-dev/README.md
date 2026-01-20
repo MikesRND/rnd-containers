@@ -4,7 +4,7 @@ A GPU-accelerated development container based on NVIDIA Clara Holoscan SDK v3.5.
 
 ## Features
 
-- NVIDIA Clara Holoscan SDK v3.6.0** with MatX
+- NVIDIA Clara Holoscan SDK v3.10.0 (CUDA 12)** with MatX
 
 ## Quick Start
 
@@ -166,4 +166,3 @@ To build the advanced networking testbench example from Holohub:
 cd /workspace/holohub
 ./holohub build --local adv_networking_testbench --language cpp
 ```
-
