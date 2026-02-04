@@ -6,7 +6,7 @@
 # - Latest tag is ONLY applied when merging to main branch via CI/CD
 #
 # Version information is centralized in version.mk (shared with CMake builds)
-include version.mk
+include ../../mk/version.mk
 
 # Docker registry and image configuration
 REGISTRY ?= docker.io

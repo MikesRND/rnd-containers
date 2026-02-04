@@ -23,14 +23,14 @@
 #   version-full       - print VER_VERSION_FULL
 #   version-build-time - print VER_BUILD_TIME
 
-# Detect current directory
-VERSION_MK_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+# VERSION file path (resolves in the working directory of the includer)
+VERSION_FILE ?= VERSION
 
 # Git command (can be overridden if needed)
 GIT ?= git
 
 # Extract version information using git commands (equivalent to VersionCommon.cmake)
-VER_SEMVER        := $(shell test -f $(VERSION_MK_DIR)VERSION && cat $(VERSION_MK_DIR)VERSION || echo "0.0.0")
+VER_SEMVER        := $(shell test -f $(VERSION_FILE) && cat $(VERSION_FILE) || echo "0.0.0")
 VER_GIT_COMMIT    := $(shell $(GIT) rev-parse --short=7 HEAD 2>/dev/null || echo "unknown")
 VER_GIT_BRANCH    := $(shell $(GIT) rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
 VER_BUILD_TIME    := $(shell date -u +"%Y-%m-%d %H:%M:%S" 2>/dev/null || echo "unknown")

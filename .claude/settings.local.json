@@ -33,7 +33,10 @@
       "Bash(DOCKER_COMPOSE_FILE=/tmp/test.yml make -n container-up)",
       "Bash(DOCKER_COMPOSE_FILE=/tmp/test.yml ./cdo --help)",
       "Bash(DOCKER_COMPOSE_FILE=custom-compose.yml bash -c 'source <(grep \"\"^DOCKER_COMPOSE\"\" ./cdo | head -2); echo \"\"$DOCKER_COMPOSE\"\"')",
-      "WebFetch(domain:catalog.ngc.nvidia.com)"
+      "WebFetch(domain:catalog.ngc.nvidia.com)",
+      "Bash(tree:*)",
+      "Bash(xargs ls:*)",
+      "Bash(git -C /home/mikesrnd/gh/mikesrnd/rnd-containers log --oneline --all)"
     ],
     "deny": [],
     "ask": []
