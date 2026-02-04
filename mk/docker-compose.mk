@@ -13,10 +13,14 @@ COMPOSE_FILE ?= docker-compose.yml
 COMPOSE_BUILD_TARGET ?=
 _DC := docker compose -f $(COMPOSE_FILE)
 
-.PHONY: compose-up compose-down compose-shell compose-shell-root compose-logs compose-restart
+.PHONY: compose-up compose-down compose-shell compose-shell-root compose-logs compose-restart compose-env
 
-compose-up: $(COMPOSE_BUILD_TARGET)
-	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) USER=$${USER:-developer} IMAGE_TAG=$(IMAGE_TAG) $(_DC) up -d
+compose-up: compose-env $(COMPOSE_BUILD_TARGET)
+	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) USER=$${USER:-developer} $(_DC) up -d
+
+compose-env: ## Write .env for docker compose with computed image vars
+	@printf 'HOLOHUB_TAG=%s\nIMAGE_FULL=%s\nIMAGE_TAG=%s\nIMAGE_NAME=%s\n' \
+		"$(HOLOHUB_TAG)" "$(IMAGE_FULL)" "$(IMAGE_TAG)" "$(IMAGE_NAME)" > .env
 
 compose-down:
 	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(_DC) down

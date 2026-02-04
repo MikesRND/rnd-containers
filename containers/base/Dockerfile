@@ -2,7 +2,6 @@
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE}
 
-LABEL maintainer="mikesrnd"
 LABEL layer="0-base"
 
 SHELL ["/bin/bash", "-eou", "pipefail", "-c"]

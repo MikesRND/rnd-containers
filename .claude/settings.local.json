@@ -36,7 +36,8 @@
       "WebFetch(domain:catalog.ngc.nvidia.com)",
       "Bash(tree:*)",
       "Bash(xargs ls:*)",
-      "Bash(git -C /home/mikesrnd/gh/mikesrnd/rnd-containers log --oneline --all)"
+      "Bash(git -C /home/mikesrnd/gh/mikesrnd/rnd-containers log --oneline --all)",
+      "Bash(docker ps:*)"
     ],
     "deny": [],
     "ask": []

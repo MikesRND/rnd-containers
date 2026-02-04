@@ -1,7 +1,7 @@
 # Container image build and release helpers
 #
 # Tagging Strategy:
-# - Development builds: IMAGE_FULL:VERSION-COMMIT_HASH (e.g., mikesrnd/gpu-algo-dev:0.0.5-abc1234)
+# - Development builds: IMAGE_FULL:VERSION-COMMIT_HASH (e.g., ${IMAGE_NAMESPACE}/gpu-algo-dev:0.0.5-abc1234)
 # - Production builds: IMAGE_FULL:VERSION and IMAGE_FULL:latest (only on main branch)
 # - Latest tag is ONLY applied when merging to main branch via CI/CD
 #
@@ -11,6 +11,7 @@ include ../../mk/version.mk
 # Docker registry and image configuration
 REGISTRY ?= docker.io
 IMAGE_NAMESPACE ?= mikesrnd
+IMAGE_SOURCE    ?= https://github.com/$(IMAGE_NAMESPACE)/rnd-containers
 IMAGE_NAME ?= gpu-algo-dev
 IMAGE_FULL := $(REGISTRY)/$(IMAGE_NAMESPACE)/$(IMAGE_NAME)
 
@@ -54,7 +55,7 @@ container-build:
 		--label "org.opencontainers.image.version=$(VER_SEMVER)" \
 		--label "org.opencontainers.image.revision=$(VER_GIT_COMMIT)" \
 		--label "org.opencontainers.image.created=$(BUILD_TIME_ISO8601)" \
-		--label "org.opencontainers.image.source=https://github.com/MikesRND/rnd-containers" \
+		--label "org.opencontainers.image.source=$(IMAGE_SOURCE)" \
 		-t $(IMAGE_FULL):$(IMAGE_TAG) \
 		-t $(IMAGE_FULL):$(VER_SEMVER) \
 		.
@@ -138,7 +139,7 @@ container-labels:
 	@echo "org.opencontainers.image.version=$(VER_SEMVER)"
 	@echo "org.opencontainers.image.revision=$(VER_GIT_COMMIT)"
 	@echo "org.opencontainers.image.created=$(BUILD_TIME_ISO8601)"
-	@echo "org.opencontainers.image.source=https://github.com/MikesRND/rnd-containers"
+	@echo "org.opencontainers.image.source=$(IMAGE_SOURCE)"
 
 container-login:
 	@echo "Logging in to $(REGISTRY) as $(IMAGE_NAMESPACE)"

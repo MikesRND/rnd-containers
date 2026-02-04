@@ -13,7 +13,7 @@ services:
     #   IMAGE_TAG=latest (use latest stable)
     #   IMAGE_TAG=0.0.5-abc1234 (use specific version+commit)
     # Default: latest (for convenience when pulling from Docker Hub)
-    image: mikesrnd/gpu-algo-dev:${IMAGE_TAG:-latest}
+    image: ${IMAGE_FULL:-gpu-algo-dev}:${IMAGE_TAG:-latest}
     pull_policy: missing
     volumes:
       - .:/mnt/current_folder:cached

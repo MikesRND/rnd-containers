@@ -5,8 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BASE_IMAGE: holohub-ano-dpdk
-    image: mikesrnd/ano-dev:${IMAGE_TAG:-latest}
+        BASE_IMAGE: ${HOLOHUB_TAG}-dpdk
+    image: ${IMAGE_FULL}:${IMAGE_TAG:-latest}
     pull_policy: missing
     volumes:
       - .:/mnt/current_folder:cached

@@ -2,7 +2,6 @@
 ARG BASE_IMAGE=holohub-ano-dpdk
 FROM ${BASE_IMAGE}
 
-LABEL maintainer="mikesrnd"
 LABEL description="ANO development container"
 
 SHELL ["/bin/bash", "-eou", "pipefail", "-c"]

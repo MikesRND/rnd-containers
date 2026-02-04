@@ -1,4 +1,11 @@
-IMAGE_NAME           := ano-dev
+HOLOSCAN_VER    ?= 3.4.0
+_HOLO_PARTS     := $(subst ., ,$(HOLOSCAN_VER))
+_HOLO_MAJOR     := $(word 1,$(_HOLO_PARTS))
+_HOLO_MINOR     := $(or $(word 2,$(_HOLO_PARTS)),0)
+_HOLO_TAG       := holo$(_HOLO_MAJOR).$(_HOLO_MINOR)
+HOLOHUB_TAG     ?= holohub-ano-$(_HOLO_TAG)
+
+IMAGE_NAME           := ano-dev$(if $(_HOLO_TAG),-$(_HOLO_TAG),)
 COMPOSE_SERVICE      := ano-dev
 COMPOSE_BUILD_TARGET :=
 

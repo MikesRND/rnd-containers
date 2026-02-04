@@ -11,8 +11,8 @@ A GPU-accelerated development container based on NVIDIA Clara Holoscan SDK v3.5.
 ### Pre-built Image (Docker Hub)
 
 ```bash
-docker pull mikesrnd/gpu-algo-dev:latest
-docker run --runtime=nvidia -it mikesrnd/gpu-algo-dev:latest
+docker pull ${IMAGE_NAMESPACE}/gpu-algo-dev:latest
+docker run --runtime=nvidia -it ${IMAGE_NAMESPACE}/gpu-algo-dev:latest
 ```
 
 ### Option 2: Local Build 
@@ -81,7 +81,7 @@ make container-push-latest  # Build, tag as :latest, and push ALL tags
 
 **Development Builds** (local - `make container-build`):
 - Tags created: `SEMVER-COMMIT_HASH` and `SEMVER`
-  - e.g., `mikesrnd/gpu-algo-dev:0.0.5-abc1234` and `mikesrnd/gpu-algo-dev:0.0.5`
+  - e.g., `${IMAGE_NAMESPACE}/gpu-algo-dev:0.0.5-abc1234` and `${IMAGE_NAMESPACE}/gpu-algo-dev:0.0.5`
 - Single build, multiple tags (no rebuild needed)
 - Does NOT include `:latest` tag
 
@@ -154,7 +154,7 @@ make container-up
 
 All registry configuration variables:
 - `REGISTRY` - Container registry (default: `docker.io`)
-- `IMAGE_NAMESPACE` - Namespace/organization (default: `mikesrnd`)
+- `IMAGE_NAMESPACE` - Namespace/organization (default: see top-level Makefile)
 - `IMAGE_NAME` - Image name (default: `gpu-algo-dev`)
 - `IMAGE_TAG` - Version tag (auto-generated or override)
 

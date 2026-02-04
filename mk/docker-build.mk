@@ -5,7 +5,7 @@
 #
 # Optional (set before including):
 #   REGISTRY            - default: docker.io
-#   IMAGE_NAMESPACE     - default: mikesrnd
+#   IMAGE_NAMESPACE     - Docker namespace/org
 #   DOCKER_BUILD_ARGS   - extra --build-arg flags (default: empty)
 #
 # Provides targets:
@@ -15,7 +15,9 @@ include $(dir $(lastword $(MAKEFILE_LIST)))version.mk
 
 REGISTRY        ?= docker.io
 IMAGE_NAMESPACE ?= mikesrnd
-IMAGE_FULL      := $(REGISTRY)/$(IMAGE_NAMESPACE)/$(IMAGE_NAME)
+IMAGE_SOURCE    ?= https://github.com/$(IMAGE_NAMESPACE)/rnd-containers
+_REG_PREFIX     := $(if $(REGISTRY),$(patsubst %/,%,$(REGISTRY))/,)
+IMAGE_FULL      := $(_REG_PREFIX)$(IMAGE_NAMESPACE)/$(IMAGE_NAME)
 IMAGE_TAG       := $(VER_VERSION_FULL)
 DOCKER_BUILD_ARGS ?=
 
@@ -27,7 +29,7 @@ docker-build:
 		$(DOCKER_BUILD_ARGS) \
 		--label "org.opencontainers.image.version=$(VER_SEMVER)" \
 		--label "org.opencontainers.image.revision=$(VER_GIT_COMMIT)" \
-		--label "org.opencontainers.image.source=https://github.com/MikesRND/rnd-containers" \
+		--label "org.opencontainers.image.source=$(IMAGE_SOURCE)" \
 		-t $(IMAGE_FULL):$(IMAGE_TAG) \
 		-t $(IMAGE_FULL):$(VER_SEMVER) \
 		-t $(IMAGE_FULL):latest \
@@ -48,4 +50,4 @@ docker-tags-with-latest:
 docker-labels:
 	@echo "org.opencontainers.image.version=$(VER_SEMVER)"
 	@echo "org.opencontainers.image.revision=$(VER_GIT_COMMIT)"
-	@echo "org.opencontainers.image.source=https://github.com/MikesRND/rnd-containers"
+	@echo "org.opencontainers.image.source=$(IMAGE_SOURCE)"
