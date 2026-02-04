@@ -14,11 +14,7 @@ CUDA_PATCH      ?= 12.6.3
 CUDA_FLAVOR     ?= base
 UBUNTU_VER      ?= 22
 
-# Holoscan short tag: 3.4.0 → holo3.4, 4.0 → holo4.0, 4 → holo4.0
-_HOLO_PARTS := $(subst ., ,$(HOLOSCAN_VER))
-_HOLO_MAJOR := $(word 1,$(_HOLO_PARTS))
-_HOLO_MINOR := $(or $(word 2,$(_HOLO_PARTS)),0)
-_HOLO_TAG   := holo$(_HOLO_MAJOR).$(_HOLO_MINOR)
+_HOLO_TAG   := holo$(HOLOSCAN_VER)
 
 # Upstream NVIDIA CUDA image
 BASE_IMAGE ?= nvcr.io/nvidia/cuda:$(CUDA_PATCH)-$(CUDA_FLAVOR)-ubuntu$(UBUNTU_VER).04
