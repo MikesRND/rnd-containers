@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG BASE_IMAGE=holohub-ano-holo3.4-dpdk
+ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
 LABEL description="ANO development container"
