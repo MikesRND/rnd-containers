@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-ARG BASE_IMAGE
+ARG BASE_IMAGE=scratch
 FROM ${BASE_IMAGE}
 
 LABEL description="ANO development container"
