@@ -5,6 +5,9 @@
 # Certificates
 certs/
 
+# Local build config
+config.mk
+
 # Build artifacts
 build/
 .output/
@@ -26,6 +29,9 @@ __pycache__/
 *$py.class
 venv/
 .env
+
+# Generated environment files
+containers/*/.env
 
 # Temporary files
 tmp/

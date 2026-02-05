@@ -3,7 +3,8 @@
 FROM nvcr.io/nvidia/clara-holoscan/holoscan:v3.10.0-cuda12-dgpu
 
 # Labels for Docker Hub
-LABEL maintainer="mikesrnd"
+ARG IMAGE_NAMESPACE=mikesrnd
+LABEL maintainer="${IMAGE_NAMESPACE}"
 LABEL description="GPU-accelerated development container"
 
 # Copy entrypoint scripts

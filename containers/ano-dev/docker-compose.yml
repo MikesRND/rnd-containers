@@ -1,0 +1,22 @@
+name: ano-dev-${USER}
+services:
+  ano-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ${HOLOHUB_TAG}-dpdk
+    image: ${IMAGE_FULL}:${IMAGE_TAG:-latest}
+    pull_policy: missing
+    volumes:
+      - .:/mnt/current_folder:cached
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - USERNAME=${USER:-developer}
+      - USERID=${USER_ID:-1000}
+      - GROUPID=${GROUP_ID:-1000}
+    tty: true
+    stdin_open: true
+    entrypoint: ["/entrypoint.sh", "sleep", "infinity"]
