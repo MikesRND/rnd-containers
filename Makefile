@@ -36,6 +36,7 @@ HOLOHUB_TAG ?= holohub-$(PROJECT)-$(_HOLO_TAG)
 export HOLOSCAN_VER
 export _HOLO_TAG
 export HOLOHUB_TAG
+export CUDA_VER
 export REGISTRY
 export IMAGE_NAMESPACE
 export IMAGE_SOURCE

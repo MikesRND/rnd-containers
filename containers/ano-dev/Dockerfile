@@ -10,6 +10,7 @@ SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 ARG CONTAINER_VERSION=dev
 ARG GIT_COMMIT=unknown
 ARG HOLOSCAN_VER=3.6.0
+ARG CUDA_VER=12.6
 
 ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
     GIT_COMMIT=${GIT_COMMIT}
@@ -56,17 +57,18 @@ ENV VIRTUAL_ENV=/opt/venv/vrtigo
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # ── CUDA development toolchain ────────────────────────────
-# CUDA apt repo is already configured by upstream cuda:12.6.3-base image
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+# CUDA apt repo is already configured by upstream cuda:*-base image.
+# Install the full toolkit to match what gpu-algo-dev gets from the
+# holoscan:*-cuda12-dgpu base (which ships the CUDA devel layer).
+# CUDA_VER (e.g. "12.6") → apt suffix "12-6".
+ARG CUDA_VER
+RUN CUDA_APT_SUFFIX=$(echo "${CUDA_VER}" | tr '.' '-') \
+    && DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        cuda-nvcc-12-6 \
-        cuda-cudart-dev-12-6 \
-        cuda-nvml-dev-12-6 \
-        libcublas-dev-12-6 \
-        libcufft-dev-12-6 \
-        libcusolver-dev-12-6 \
-        libcurand-dev-12-6 \
-    && rm -rf /var/lib/apt/lists/*
+        cuda-toolkit-${CUDA_APT_SUFFIX} \
+    && rm -rf /var/lib/apt/lists/* \
+    && nvcc --version | grep -q "release ${CUDA_VER}" \
+    || { echo "ERROR: nvcc version does not match CUDA_VER=${CUDA_VER}"; exit 1; }
 
 ENV CUDA_HOME=/usr/local/cuda
 ENV PATH="${CUDA_HOME}/bin:$PATH"

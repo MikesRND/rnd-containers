@@ -40,7 +40,11 @@
       "Bash(docker ps:*)",
       "Bash(curl:*)",
       "WebFetch(domain:gitlab.com)",
-      "Bash(git ls-remote:*)"
+      "Bash(git ls-remote:*)",
+      "WebFetch(domain:manpages.ubuntu.com)",
+      "WebFetch(domain:hub.docker.com)",
+      "WebFetch(domain:carlpearson.net)",
+      "WebFetch(domain:lokiwager.github.io)"
     ],
     "deny": [],
     "ask": []
