@@ -97,6 +97,7 @@ configure: ## Persist build settings to config.mk
 	@echo "REGISTRY        := $(REGISTRY)"        >> config.mk
 	@echo "IMAGE_NAMESPACE := $(IMAGE_NAMESPACE)" >> config.mk
 	@echo "IMAGE_SOURCE    := $(IMAGE_SOURCE)"    >> config.mk
+	@echo "CUDA_VER        := $(CUDA_VER)"        >> config.mk
 	@echo "Saved config.mk"
 
 show-config: ## Print effective build settings
