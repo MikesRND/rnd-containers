@@ -9,8 +9,8 @@ SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 # Version info (injected at build time)
 ARG CONTAINER_VERSION=dev
 ARG GIT_COMMIT=unknown
-ARG HOLOSCAN_VER=3.6.0
-ARG CUDA_VER=12.6
+ARG HOLOSCAN_VER
+ARG CUDA_VER
 
 ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
     GIT_COMMIT=${GIT_COMMIT}
@@ -60,9 +60,11 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # CUDA apt repo is already configured by upstream cuda:*-base image.
 # Install the full toolkit to match what gpu-algo-dev gets from the
 # holoscan:*-cuda12-dgpu base (which ships the CUDA devel layer).
-# CUDA_VER (e.g. "12.6") → apt suffix "12-6".
+# Guard: fail fast if CUDA_VER was not passed via --build-arg.
+# Derive apt package suffix from CUDA_VER (e.g. "12.6" → "12-6").
 ARG CUDA_VER
-RUN CUDA_APT_SUFFIX=$(echo "${CUDA_VER}" | tr '.' '-') \
+RUN test -n "${CUDA_VER}" || { echo "ERROR: CUDA_VER build-arg is required"; exit 1; } \
+    && CUDA_APT_SUFFIX=$(echo "${CUDA_VER}" | tr '.' '-') \
     && DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         cuda-toolkit-${CUDA_APT_SUFFIX} \
@@ -86,7 +88,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 # NOTE: The venv is auto-activated via ENV above, so all pip installs
 # (including anything holohub setup runs internally) land in the
 # Python 3.11 venv, not system Python 3.10. This is intentional.
-RUN cd /workspace \
+# Guard: fail fast if HOLOSCAN_VER was not passed via --build-arg.
+RUN test -n "${HOLOSCAN_VER}" || { echo "ERROR: HOLOSCAN_VER build-arg is required"; exit 1; } \
+    && cd /workspace \
     && git clone --branch holoscan-sdk-${HOLOSCAN_VER} --depth 1 \
         https://github.com/nvidia-holoscan/holohub.git \
     && chmod +x /workspace/holohub/holohub \
