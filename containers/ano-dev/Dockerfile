@@ -75,6 +75,18 @@ RUN test -n "${CUDA_VER}" || { echo "ERROR: CUDA_VER build-arg is required"; exi
 ENV CUDA_HOME=/usr/local/cuda
 ENV PATH="${CUDA_HOME}/bin:$PATH"
 
+# ── GCC 13 toolchain (C++20 <format> support) ────────────
+# Ubuntu 22.04 ships GCC 11 via build-essential (from holohub layer).
+# GCC 13 is needed for full C++20 support (including <format> header).
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && add-apt-repository -y ppa:ubuntu-toolchain-r/test \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        gcc-13 g++-13 \
+    && update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 130 \
+        --slave /usr/bin/g++ g++ /usr/bin/g++-13 \
+    && rm -rf /var/lib/apt/lists/*
+
 # ── Development tools + C++ libraries ─────────────────────
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
