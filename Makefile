@@ -4,7 +4,7 @@
 -include config.mk
 
 # ── Configuration ────────────────────────────────────────────
-HOLOSCAN_VER    ?= 3.4.0
+HOLOSCAN_VER    ?= 3.11.0
 REGISTRY        ?= docker.io
 IMAGE_NAMESPACE ?= mikesrnd
 IMAGE_SOURCE    ?= https://github.com/$(IMAGE_NAMESPACE)/rnd-containers
@@ -36,6 +36,7 @@ HOLOHUB_TAG ?= holohub-$(PROJECT)-$(_HOLO_TAG)
 export HOLOSCAN_VER
 export _HOLO_TAG
 export HOLOHUB_TAG
+export CUDA_VER
 export REGISTRY
 export IMAGE_NAMESPACE
 export IMAGE_SOURCE
@@ -96,6 +97,7 @@ configure: ## Persist build settings to config.mk
 	@echo "REGISTRY        := $(REGISTRY)"        >> config.mk
 	@echo "IMAGE_NAMESPACE := $(IMAGE_NAMESPACE)" >> config.mk
 	@echo "IMAGE_SOURCE    := $(IMAGE_SOURCE)"    >> config.mk
+	@echo "CUDA_VER        := $(CUDA_VER)"        >> config.mk
 	@echo "Saved config.mk"
 
 show-config: ## Print effective build settings

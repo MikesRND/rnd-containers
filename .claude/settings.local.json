@@ -38,7 +38,13 @@
       "Bash(xargs ls:*)",
       "Bash(git -C /home/mikesrnd/gh/mikesrnd/rnd-containers log --oneline --all)",
       "Bash(docker ps:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:gitlab.com)",
+      "Bash(git ls-remote:*)",
+      "WebFetch(domain:manpages.ubuntu.com)",
+      "WebFetch(domain:hub.docker.com)",
+      "WebFetch(domain:carlpearson.net)",
+      "WebFetch(domain:lokiwager.github.io)"
     ],
     "deny": [],
     "ask": []
