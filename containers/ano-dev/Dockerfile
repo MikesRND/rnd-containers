@@ -61,6 +61,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         cuda-nvcc-12-6 \
         cuda-cudart-dev-12-6 \
+        cuda-nvml-dev-12-6 \
         libcublas-dev-12-6 \
         libcufft-dev-12-6 \
         libcusolver-dev-12-6 \
