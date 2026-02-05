@@ -37,7 +37,8 @@
       "Bash(tree:*)",
       "Bash(xargs ls:*)",
       "Bash(git -C /home/mikesrnd/gh/mikesrnd/rnd-containers log --oneline --all)",
-      "Bash(docker ps:*)"
+      "Bash(docker ps:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
