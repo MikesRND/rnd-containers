@@ -1,8 +1,13 @@
 name: ano-dev-${USER}
 services:
   ano-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_IMAGE: ${HOLOHUB_TAG}-dpdk
     image: ${IMAGE_FULL}:latest
-    pull_policy: never
+    pull_policy: missing
     volumes:
       - .:/mnt/current_folder:cached
     runtime: nvidia
