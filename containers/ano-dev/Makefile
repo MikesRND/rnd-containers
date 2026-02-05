@@ -10,7 +10,8 @@ COMPOSE_BUILD_TARGET :=
 DOCKER_BUILD_ARGS = \
     --build-arg BASE_IMAGE=$(HOLOHUB_TAG)-dpdk \
     --build-arg CONTAINER_VERSION=$(VER_SEMVER) \
-    --build-arg GIT_COMMIT=$(VER_GIT_COMMIT)
+    --build-arg GIT_COMMIT=$(VER_GIT_COMMIT) \
+    --build-arg HOLOSCAN_VER=$(HOLOSCAN_VER)
 
 include ../../mk/docker-build.mk
 include ../../mk/docker-compose.mk

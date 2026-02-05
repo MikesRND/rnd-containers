@@ -4,7 +4,7 @@
 -include config.mk
 
 # ── Configuration ────────────────────────────────────────────
-HOLOSCAN_VER    ?= 3.4.0
+HOLOSCAN_VER    ?= 3.11.0
 REGISTRY        ?= docker.io
 IMAGE_NAMESPACE ?= mikesrnd
 IMAGE_SOURCE    ?= https://github.com/$(IMAGE_NAMESPACE)/rnd-containers
