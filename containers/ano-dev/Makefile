@@ -1,4 +1,4 @@
-HOLOSCAN_VER    ?= 3.4.0
+HOLOSCAN_VER    ?= 3.11.0
 _HOLO_TAG       := holo$(HOLOSCAN_VER)
 HOLOHUB_TAG     ?= holohub-ano-$(_HOLO_TAG)
 
