@@ -19,7 +19,7 @@
 ARG HOLOSCAN_DEB_SRC="remote" # or "local"
 ARG HOLOSCAN_DEB_REMOTE_VERSION=3.4.0 # only used if HOLOSCAN_DEB_SRC is "remote"
 ARG HOLOSCAN_DEB_LOCAL_PATH="./holoscan.deb" # only used if HOLOSCAN_DEB_SRC is "local"
-ARG BASE_TAG=base-cuda12.6-ubu22
+ARG BASE_TAG
 # When pulling from a registry instead of local build:
 #   --build-arg BASE_TAG=ghcr.io/org/base:cuda12.6-ubu22
 
