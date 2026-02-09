@@ -90,10 +90,17 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 # ── Development tools + C++ libraries ─────────────────────
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        vim wget \
-        clang-format clang-tidy lcov ccache \
-        doxygen graphviz \
-        libboost-all-dev libpoco-dev \
+        vim \
+        wget \
+        clang-format \
+        clang-tidy \
+        lcov \
+        ccache \
+        doxygen \
+        graphviz \
+        libboost-all-dev \
+        libpoco-dev \
+        libyaml-cpp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Holohub clone + setup + system deps ───────────────────
