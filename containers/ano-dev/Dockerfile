@@ -131,6 +131,25 @@ ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 
 RUN echo 'export JREHOME=$(readlink /etc/alternatives/java | sed -e "s/\/bin\/java//")' >> /etc/bash.bashrc
 
+# ── mlnx-dpdk + ANO operator (ConnectX-7 / H200 support) ─
+# mlnx-dpdk-dev is pinned implicitly by DOCA_VERSION (3.2.1) configured in layer 1.
+# --allow-downgrades handles possible libibverbs version differences from layer 1.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --allow-downgrades \
+        mlnx-dpdk-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure pkg-config finds mlnx-dpdk (installed to /opt/mellanox/dpdk/)
+ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}"
+
+# Build ANO operator from HoloHub source (DPDK-only backend).
+# Standalone cmake build guarantees version sync with the HoloHub source.
+# Installs libs + headers + CMake export targets to /opt/nvidia/holoscan/.
+RUN cd /workspace/holohub/operators/advanced_network/advanced_network/ \
+    && cmake -B build -DANO_MGR="dpdk" -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build -j$(nproc) \
+    && cmake --install build --prefix /opt/nvidia/holoscan
+
 # ── Source builds (GTest, nvbench, spdlog, Taskflow) ──────
 RUN mkdir -p /tmp/builds \
     && cd /tmp/builds \
