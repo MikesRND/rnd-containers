@@ -127,7 +127,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Ensure pkg-config finds mlnx-dpdk (installed to /opt/mellanox/dpdk/)
-ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH}"
+ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
 # Build ANO operator from HoloHub source (DPDK-only backend).
 # Standalone cmake build guarantees version sync with the HoloHub source.
