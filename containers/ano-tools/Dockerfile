@@ -29,6 +29,7 @@ RUN pip install --no-cache-dir holoscan-cli pytest setuptools
 # ── CUDA development toolchain ────────────────────────────
 # Guard: fail fast if CUDA_VER was not passed via --build-arg.
 ARG CUDA_VER
+ARG CUDA_ARCHS="80;86;89;90"
 RUN test -n "${CUDA_VER}" || { echo "ERROR: CUDA_VER build-arg is required"; exit 1; } \
     && CUDA_APT_SUFFIX=$(echo "${CUDA_VER}" | tr '.' '-') \
     && DEBIAN_FRONTEND=noninteractive apt-get update \
@@ -104,6 +105,7 @@ RUN cd /workspace/holohub \
         -DPKG_holoscan-networking=ON \
         -DANO_MGR=dpdk \
         -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
         -DHOLOHUB_BUILD_PYTHON=OFF \
         -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
         -DBUILD_TESTING=OFF \
@@ -135,7 +137,7 @@ RUN mkdir -p /tmp/builds \
         -DNVBench_ENABLE_EXAMPLES=OFF \
         -DNVBench_ENABLE_TESTING=OFF \
         -DNVBench_ENABLE_CUPTI=OFF \
-        -DCMAKE_CUDA_ARCHITECTURES="80;86;89;90" \
+        -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
         -DCMAKE_INSTALL_PREFIX=/usr/local \
         -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j$(nproc) \

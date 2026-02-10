@@ -12,6 +12,7 @@ PROJECT         ?= ano
 CUDA_VER        ?= 13.1
 CUDA_PATCH      ?= 13.1.0
 CUDA_FLAVOR     ?= base
+CUDA_ARCHS      ?= 80;86;89;90
 UBUNTU_VER      ?= 22
 
 _HOLO_TAG   := holo$(HOLOSCAN_VER)
@@ -39,6 +40,7 @@ export _HOLO_TAG
 export HOLOHUB_TAG
 export ANO_TOOLS_TAG
 export CUDA_VER
+export CUDA_ARCHS
 export REGISTRY
 export IMAGE_NAMESPACE
 export IMAGE_SOURCE
@@ -87,6 +89,7 @@ ano-tools: holohub-dpdk ## Build layer-2 SDK image
 		--build-arg BASE_IMAGE=$(HOLOHUB_TAG)-dpdk \
 		--build-arg HOLOSCAN_VER=$(HOLOSCAN_VER) \
 		--build-arg CUDA_VER=$(CUDA_VER) \
+		--build-arg CUDA_ARCHS="$(CUDA_ARCHS)" \
 		-t $(ANO_TOOLS_TAG) \
 		-f containers/ano-tools/Dockerfile \
 		containers/ano-tools/
@@ -110,6 +113,7 @@ configure: ## Persist build settings to config.mk
 	@echo "IMAGE_NAMESPACE := $(IMAGE_NAMESPACE)" >> config.mk
 	@echo "IMAGE_SOURCE    := $(IMAGE_SOURCE)"    >> config.mk
 	@echo "CUDA_VER        := $(CUDA_VER)"        >> config.mk
+	@echo "CUDA_ARCHS      := $(CUDA_ARCHS)"      >> config.mk
 	@echo "Saved config.mk"
 
 show-config: ## Print effective build settings
@@ -122,6 +126,7 @@ show-config: ## Print effective build settings
 	@echo "  HOLOHUB_TAG     = $(HOLOHUB_TAG)"
 	@echo "  ANO_TOOLS_TAG   = $(ANO_TOOLS_TAG)"
 	@echo "  BASE_TAG        = $(BASE_TAG)"
+	@echo "  CUDA_ARCHS      = $(CUDA_ARCHS)"
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
