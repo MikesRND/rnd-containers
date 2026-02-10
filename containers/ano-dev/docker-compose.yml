@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BASE_IMAGE: ${HOLOHUB_TAG}-dpdk
+        BASE_IMAGE: ${ANO_TOOLS_TAG}
     image: ${IMAGE_FULL}:latest
     pull_policy: missing
     volumes:
