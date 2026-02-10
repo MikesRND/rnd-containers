@@ -27,17 +27,17 @@ RUN chmod +x /setup_workspace_mapping.sh && mkdir -p /etc/entrypoint.d \
        } > /etc/entrypoint.d/10-workspace-mapping.sh \
     && chmod +x /etc/entrypoint.d/10-workspace-mapping.sh
 
-# ── Python 3.11 toolchain (system 3.10 stays untouched) ───
+# ── Python 3.12 toolchain (system 3.10 stays untouched) ───
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends software-properties-common \
     && add-apt-repository -y ppa:deadsnakes/ppa \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        python3.11 python3.11-venv python3.11-dev \
+        python3.12 python3.12-venv python3.12-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Venv: vrtigo (/opt/venv/vrtigo) ──────────────────────
-RUN python3.11 -m venv /opt/venv/vrtigo \
+RUN python3.12 -m venv /opt/venv/vrtigo \
     && cd /workspace \
     && git clone --branch main --depth 1 https://github.com/MikesRND/vrtigo.git \
     && /opt/venv/vrtigo/bin/pip install --no-cache-dir \
@@ -52,7 +52,7 @@ RUN { echo '#!/bin/bash'; \
     } > /usr/local/bin/use-vrtigo \
     && chmod +x /usr/local/bin/use-vrtigo
 
-# ── Auto-activate venv (Python 3.11 becomes default python/pip) ──
+# ── Auto-activate venv (Python 3.12 becomes default python/pip) ──
 ENV VIRTUAL_ENV=/opt/venv/vrtigo
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
@@ -106,7 +106,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 # ── Holohub clone + setup + system deps ───────────────────
 # NOTE: The venv is auto-activated via ENV above, so all pip installs
 # (including anything holohub setup runs internally) land in the
-# Python 3.11 venv, not system Python 3.10. This is intentional.
+# Python 3.12 venv, not system Python 3.10. This is intentional.
 # Guard: fail fast if HOLOSCAN_VER was not passed via --build-arg.
 RUN test -n "${HOLOSCAN_VER}" || { echo "ERROR: HOLOSCAN_VER build-arg is required"; exit 1; } \
     && cd /workspace \
