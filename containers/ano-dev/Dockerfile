@@ -194,16 +194,19 @@ ENV CMAKE_C_COMPILER_LAUNCHER=ccache
 ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache
 ENV CMAKE_CUDA_COMPILER_LAUNCHER=ccache
 
-# MOTD version banner (values baked at build time via double-quoted echo)
+# ── Version-info script  ──────────────────────────────
+COPY scripts/version-info.sh /usr/local/bin/version-info
+RUN chmod +x /usr/local/bin/version-info \
+    && version-info --live > /etc/version-info.cache
+
+# Version banner (calls version-info at shell entry)
 # - /etc/profile.d/ covers login shells (entrypoint su -)
 # - /etc/bash.bashrc covers non-login interactive shells (docker exec bash)
 # - _CONTAINER_MOTD_SHOWN guard prevents double-display
-RUN { echo '# Container version banner'; \
+RUN { echo '# Container version info banner'; \
       echo 'if [ -z "${_CONTAINER_MOTD_SHOWN:-}" ]; then'; \
       echo '    export _CONTAINER_MOTD_SHOWN=1'; \
-      echo '    echo ""'; \
-      echo "    echo \"  ano-dev ${CONTAINER_VERSION} (${GIT_COMMIT})\""; \
-      echo '    echo ""'; \
+      echo '    version-info'; \
       echo 'fi'; \
     } > /etc/profile.d/01-container-motd.sh \
     && chmod +x /etc/profile.d/01-container-motd.sh \
