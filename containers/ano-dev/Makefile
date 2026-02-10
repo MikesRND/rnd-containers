@@ -7,24 +7,20 @@
 ifndef HOLOSCAN_VER
 $(error HOLOSCAN_VER must be set; run from repo root or export it)
 endif
-ifndef CUDA_VER
-$(error CUDA_VER must be set; run from repo root or export it)
-endif
 
 _HOLO_TAG       := holo$(HOLOSCAN_VER)
-HOLOHUB_TAG     ?= holohub-ano-$(_HOLO_TAG)
+ANO_TOOLS_TAG   ?= ano-tools-$(_HOLO_TAG)
 
 IMAGE_NAME           := ano-dev$(if $(_HOLO_TAG),-$(_HOLO_TAG),)
 COMPOSE_SERVICE      := ano-dev
 COMPOSE_BUILD_TARGET :=
 
 # Pass version info into Docker build for MOTD
+# SDK version args (HOLOSCAN_VER, CUDA_VER) are baked into the ano-tools layer.
 DOCKER_BUILD_ARGS = \
-    --build-arg BASE_IMAGE=$(HOLOHUB_TAG)-dpdk \
+    --build-arg BASE_IMAGE=$(ANO_TOOLS_TAG) \
     --build-arg CONTAINER_VERSION=$(VER_SEMVER) \
-    --build-arg GIT_COMMIT=$(VER_GIT_COMMIT) \
-    --build-arg HOLOSCAN_VER=$(HOLOSCAN_VER) \
-    --build-arg CUDA_VER=$(CUDA_VER)
+    --build-arg GIT_COMMIT=$(VER_GIT_COMMIT)
 
 include ../../mk/docker-build.mk
 include ../../mk/docker-compose.mk

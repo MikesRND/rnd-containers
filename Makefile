@@ -29,13 +29,15 @@ _FLAVOR := $(if $(filter base,$(CUDA_FLAVOR)),,-$(CUDA_FLAVOR))
 _VTAG := cuda$(CUDA_VER)-ubu$(UBUNTU_VER)$(_FLAVOR)
 
 # ── Local image tags (flat, for docker images | grep) ────────
-BASE_TAG    ?= base-$(_VTAG)
-HOLOHUB_TAG ?= holohub-$(PROJECT)-$(_HOLO_TAG)
+BASE_TAG      ?= base-$(_VTAG)
+HOLOHUB_TAG   ?= holohub-$(PROJECT)-$(_HOLO_TAG)
+ANO_TOOLS_TAG ?= ano-tools-$(_HOLO_TAG)
 
 # Export variables for the ano-dev sub-make
 export HOLOSCAN_VER
 export _HOLO_TAG
 export HOLOHUB_TAG
+export ANO_TOOLS_TAG
 export CUDA_VER
 export REGISTRY
 export IMAGE_NAMESPACE
@@ -43,7 +45,7 @@ export IMAGE_SOURCE
 
 # ──────────────────────────────────────────────────────────────
 .PHONY: all base holohub-dpdk holohub-gpunetio holohub-rivermax \
-        ano-dev clean help configure show-config
+        ano-tools ano-dev clean help configure show-config
 
 all: base holohub-dpdk ## Build layer-0 + layer-1 dpdk (default)
 
@@ -80,7 +82,16 @@ holohub-rivermax: base ## Build holohub with rivermax target
 		-f containers/ano/holohub/Dockerfile \
 		containers/ano/holohub/
 
-ano-dev: holohub-dpdk ## Build ano-dev container
+ano-tools: holohub-dpdk ## Build layer-2 SDK image
+	docker build \
+		--build-arg BASE_IMAGE=$(HOLOHUB_TAG)-dpdk \
+		--build-arg HOLOSCAN_VER=$(HOLOSCAN_VER) \
+		--build-arg CUDA_VER=$(CUDA_VER) \
+		-t $(ANO_TOOLS_TAG) \
+		-f containers/ano-tools/Dockerfile \
+		containers/ano-tools/
+
+ano-dev: ano-tools ## Build ano-dev container
 	$(MAKE) -C containers/ano-dev docker-build
 
 # ── Utilities ────────────────────────────────────────────────
@@ -88,7 +99,8 @@ clean: ## Remove built images
 	docker rmi -f $(BASE_TAG) \
 		$(HOLOHUB_TAG)-dpdk \
 		$(HOLOHUB_TAG)-gpunetio \
-		$(HOLOHUB_TAG)-rivermax 2>/dev/null || true
+		$(HOLOHUB_TAG)-rivermax \
+		$(ANO_TOOLS_TAG) 2>/dev/null || true
 	$(MAKE) -C containers/ano-dev docker-clean 2>/dev/null || true
 
 configure: ## Persist build settings to config.mk
@@ -108,6 +120,7 @@ show-config: ## Print effective build settings
 	@echo "  IMAGE_NAMESPACE = $(IMAGE_NAMESPACE)"
 	@echo "  IMAGE_SOURCE    = $(IMAGE_SOURCE)"
 	@echo "  HOLOHUB_TAG     = $(HOLOHUB_TAG)"
+	@echo "  ANO_TOOLS_TAG   = $(ANO_TOOLS_TAG)"
 	@echo "  BASE_TAG        = $(BASE_TAG)"
 
 help: ## Show this help

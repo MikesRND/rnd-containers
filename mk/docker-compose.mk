@@ -19,8 +19,8 @@ compose-up: compose-env $(COMPOSE_BUILD_TARGET)
 	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) USER=$${USER:-developer} $(_DC) up -d
 
 compose-env: ## Write .env for docker compose with computed image vars
-	@printf 'HOLOHUB_TAG=%s\nIMAGE_FULL=%s\nIMAGE_TAG=%s\nIMAGE_NAME=%s\n' \
-		"$(HOLOHUB_TAG)" "$(IMAGE_FULL)" "$(IMAGE_TAG)" "$(IMAGE_NAME)" > .env
+	@printf 'HOLOHUB_TAG=%s\nANO_TOOLS_TAG=%s\nIMAGE_FULL=%s\nIMAGE_TAG=%s\nIMAGE_NAME=%s\n' \
+		"$(HOLOHUB_TAG)" "$(ANO_TOOLS_TAG)" "$(IMAGE_FULL)" "$(IMAGE_TAG)" "$(IMAGE_NAME)" > .env
 
 compose-down:
 	@USER_ID=$$(id -u) GROUP_ID=$$(id -g) $(_DC) down
