@@ -95,13 +95,21 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 # Ensure pkg-config finds mlnx-dpdk (installed to /opt/mellanox/dpdk/)
 ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
 
-# Build ANO operator from HoloHub source (DPDK-only backend).
-# Standalone cmake build guarantees version sync with the HoloHub source.
-# Installs libs + headers + CMake export targets to /opt/nvidia/holoscan/.
-RUN cd /workspace/holohub/operators/advanced_network/advanced_network/ \
-    && cmake -B build -DANO_MGR="dpdk" -DCMAKE_BUILD_TYPE=Release \
+# Build holoscan-networking package from HoloHub (DPDK backend).
+# Top-level build generates CMake export targets (holoscan-networkingConfig.cmake)
+# so downstream projects can use find_package(holoscan-networking).
+# Installs libs, headers, cmake configs, and example apps to /opt/nvidia/holoscan/.
+RUN cd /workspace/holohub \
+    && cmake -B build \
+        -DPKG_holoscan-networking=ON \
+        -DANO_MGR=dpdk \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DHOLOHUB_BUILD_PYTHON=OFF \
+        -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
+        -DBUILD_TESTING=OFF \
     && cmake --build build -j$(nproc) \
-    && cmake --install build --prefix /opt/nvidia/holoscan
+    && cmake --install build --prefix /opt/nvidia/holoscan \
+    && rm -rf build
 
 # ── Source builds (GTest, nvbench, spdlog, Taskflow) ──────
 RUN mkdir -p /tmp/builds \
