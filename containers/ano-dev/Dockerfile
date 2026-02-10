@@ -90,10 +90,17 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 # ── Development tools + C++ libraries ─────────────────────
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        vim wget \
-        clang-format clang-tidy lcov ccache \
-        doxygen graphviz \
-        libboost-all-dev libpoco-dev \
+        vim \
+        wget \
+        clang-format \
+        clang-tidy \
+        lcov \
+        ccache \
+        doxygen \
+        graphviz \
+        libboost-all-dev \
+        libpoco-dev \
+        libyaml-cpp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Holohub clone + setup + system deps ───────────────────
@@ -109,27 +116,26 @@ RUN test -n "${HOLOSCAN_VER}" || { echo "ERROR: HOLOSCAN_VER build-arg is requir
     && /workspace/holohub/holohub setup \
     && echo ". /etc/bash_completion.d/holohub_autocomplete" >> /etc/bash.bashrc
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        pkg-config \
-        libgstreamer1.0-0 \
-        libgstreamer-plugins-base1.0-0 \
-        libgles2 \
-        libopengl0 \
-        libcairo2-dev \
-        libgirepository1.0-dev \
-        gobject-introspection \
-        libgtk-3-dev \
-        libcanberra-gtk-module \
-        openjdk-21-jre \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN pip install --no-cache-dir \
-        -r /workspace/holohub/benchmarks/holoscan_flow_benchmarking/requirements.txt
-
 ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 
-RUN echo 'export JREHOME=$(readlink /etc/alternatives/java | sed -e "s/\/bin\/java//")' >> /etc/bash.bashrc
+# ── mlnx-dpdk + ANO operator (ConnectX-7 / H200 support) ─
+# mlnx-dpdk-dev is pinned implicitly by DOCA_VERSION (3.2.1) configured in layer 1.
+# --allow-downgrades handles possible libibverbs version differences from layer 1.
+RUN DEBIAN_FRONTEND=noninteractive apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --allow-downgrades \
+        mlnx-dpdk-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Ensure pkg-config finds mlnx-dpdk (installed to /opt/mellanox/dpdk/)
+ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
+
+# Build ANO operator from HoloHub source (DPDK-only backend).
+# Standalone cmake build guarantees version sync with the HoloHub source.
+# Installs libs + headers + CMake export targets to /opt/nvidia/holoscan/.
+RUN cd /workspace/holohub/operators/advanced_network/advanced_network/ \
+    && cmake -B build -DANO_MGR="dpdk" -DCMAKE_BUILD_TYPE=Release \
+    && cmake --build build -j$(nproc) \
+    && cmake --install build --prefix /opt/nvidia/holoscan
 
 # ── Source builds (GTest, nvbench, spdlog, Taskflow) ──────
 RUN mkdir -p /tmp/builds \

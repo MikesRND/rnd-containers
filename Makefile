@@ -9,8 +9,8 @@ REGISTRY        ?= docker.io
 IMAGE_NAMESPACE ?= mikesrnd
 IMAGE_SOURCE    ?= https://github.com/$(IMAGE_NAMESPACE)/rnd-containers
 PROJECT         ?= ano
-CUDA_VER        ?= 12.6
-CUDA_PATCH      ?= 12.6.3
+CUDA_VER        ?= 13.1
+CUDA_PATCH      ?= 13.1.0
 CUDA_FLAVOR     ?= base
 UBUNTU_VER      ?= 22
 
