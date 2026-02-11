@@ -34,6 +34,12 @@ RUN { echo '#!/bin/bash'; \
     } > /usr/local/bin/use-vrtigo \
     && chmod +x /usr/local/bin/use-vrtigo
 
+# Version info (injected at build time – placed after heavy layers to avoid cache-busting)
+ARG CONTAINER_VERSION=dev
+ARG GIT_COMMIT=unknown
+ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
+    GIT_COMMIT=${GIT_COMMIT}
+
 # ── Version-info script  ──────────────────────────────
 COPY scripts/version-info.sh /usr/local/bin/version-info
 RUN chmod +x /usr/local/bin/version-info \
@@ -52,12 +58,6 @@ RUN { echo '# Container version info banner'; \
     && chmod +x /etc/profile.d/01-container-motd.sh \
     && printf '\n# Container MOTD for non-login interactive shells\nif [ -n "${PS1:-}" ]; then\n    . /etc/profile.d/01-container-motd.sh\nfi\n' \
       >> /etc/bash.bashrc
-
-# Version info (injected at build time – placed late to avoid cache-busting heavy layers)
-ARG CONTAINER_VERSION=dev
-ARG GIT_COMMIT=unknown
-ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
-    GIT_COMMIT=${GIT_COMMIT}
 
 WORKDIR /workspace
 CMD ["bash"]
