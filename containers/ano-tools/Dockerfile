@@ -100,7 +100,10 @@ ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig${PKG_CONF
 # Top-level build generates CMake export targets (holoscan-networkingConfig.cmake)
 # so downstream projects can use find_package(holoscan-networking).
 # Installs libs, headers, cmake configs, and example apps to /opt/nvidia/holoscan/.
+# Fix: adv_networking_bench hardcodes compute_70 which CUDA 13+ dropped.
 RUN cd /workspace/holohub \
+    && sed -i 's/set(CMAKE_CUDA_ARCHITECTURES "70;80;90")/set(CMAKE_CUDA_ARCHITECTURES "'"${CUDA_ARCHS}"'")/' \
+        applications/adv_networking_bench/cpp/CMakeLists.txt \
     && cmake -B build \
         -DPKG_holoscan-networking=ON \
         -DANO_MGR=dpdk \
