@@ -6,13 +6,6 @@ LABEL description="ANO development container"
 
 SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 
-# Version info (injected at build time)
-ARG CONTAINER_VERSION=dev
-ARG GIT_COMMIT=unknown
-
-ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
-    GIT_COMMIT=${GIT_COMMIT}
-
 # Ensure /workspace exists (base image may not provide it)
 RUN mkdir -p /workspace
 
@@ -40,6 +33,12 @@ RUN { echo '#!/bin/bash'; \
       echo 'source /opt/venv/vrtigo/bin/activate'; \
     } > /usr/local/bin/use-vrtigo \
     && chmod +x /usr/local/bin/use-vrtigo
+
+# Version info (injected at build time – placed after heavy layers to avoid cache-busting)
+ARG CONTAINER_VERSION=dev
+ARG GIT_COMMIT=unknown
+ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
+    GIT_COMMIT=${GIT_COMMIT}
 
 # ── Version-info script  ──────────────────────────────
 COPY scripts/version-info.sh /usr/local/bin/version-info
