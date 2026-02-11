@@ -1,5 +1,29 @@
 # ano-dev Version Info
 
+## v0.1.8
+
+**Base:** `nvcr.io/nvidia/cuda:13.1.0-base-ubuntu22.04`
+
+### DPDK / Networking Stack
+
+| Component | Version | Notes |
+|---|---|---|
+| DPDK | 24.11.3 | Upstream, built from source in Layer 1 |
+| DOCA repo | 3.2.1 | APT repo for mlnx-ofed-kernel-utils |
+| OFED | 25.10 | Via mlnx-ofed-kernel-utils (ibdev2netdev) |
+| libibverbs | (from base-deps) | RDMA/ConnectX driver stack |
+| librdmacm | (from base-deps) | RDMA/ConnectX driver stack |
+
+### Changes from v0.1.4
+
+- **Removed `mlnx-dpdk-dev`** (Mellanox DPDK 22.11 fork) from Layer 2 (`ano-tools/Dockerfile`)
+- **Removed `PKG_CONFIG_PATH` override** pointing to `/opt/mellanox/dpdk/`
+- `holoscan-networking` now links against **upstream DPDK 24.11.3** built from source in Layer 1
+- MOTD networking line updated: `DOCA 3.2.1 · OFED 25.10 · DPDK 24.11.3`
+- `gpunetio` stage in Layer 1 marked as EXPERIMENTAL (not supported by holoscan-networking)
+- `ENV DOCA_VERSION` exposed from Layer 1 for runtime version reporting
+
+
 ## v0.1.4
 
 **Base:** `nvcr.io/nvidia/cuda:13.1.0-base-ubuntu22.04`

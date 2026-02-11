@@ -122,7 +122,7 @@ ARG DPDK_VERSION=24.11.3
 ARG DPDK_BUILD_DIR=/opt/dpdk-build
 ARG DPDK_INSTALL_PREFIX=/usr/local
 ARG DOCA_VERSION=3.2.1
-
+ENV DOCA_VERSION=${DOCA_VERSION}
 
 # - infiniband-diags for IB diagnostics
 # - mft for Mellanox Flex Transport
@@ -139,20 +139,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libnuma-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Upstream DPDK source build Unused.  ANO uses mlnx-dpdk-dev 
-# RUN curl -fsSL https://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz -o /tmp/dpdk-${DPDK_VERSION}.tar.xz \
-#     && tar xf /tmp/dpdk-${DPDK_VERSION}.tar.xz -C /tmp \
-#     && cd /tmp/dpdk-stable-${DPDK_VERSION} \
-#     && meson setup ${DPDK_BUILD_DIR} \
-#         --prefix=${DPDK_INSTALL_PREFIX} \
-#         -Dtests=false \
-#         -Denable_docs=false \
-#         -Ddisable_drivers=baseband/*,bus/ifpga/*,common/cpt,common/dpaax,common/iavf,common/octeontx,common/octeontx2,crypto/nitrox,net/ark,net/atlantic,net/avp,net/axgbe,net/bnx2x,net/bnxt,net/cxgbe,net/e1000,net/ena,net/enic,net/fm10k,net/hinic,net/hns3,net/i40e,net/ixgbe,vdpa/ifc,net/igc,net/liquidio,net/netvsc,net/nfp,net/qede,net/sfc,net/thunderx,net/vdev_netvsc,net/vmxnet3,regex/octeontx2 \
-#     && cd ${DPDK_BUILD_DIR} \
-#     && ninja \
-#     && meson install \
-#     && ldconfig \
-#     && rm -rf /tmp/dpdk-stable-${DPDK_VERSION} /tmp/dpdk-stable-${DPDK_VERSION}.tar.xz ${DPDK_BUILD_DIR} /tmp/dpdk_patches
+RUN curl -fsSL https://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz -o /tmp/dpdk-${DPDK_VERSION}.tar.xz \
+    && tar xf /tmp/dpdk-${DPDK_VERSION}.tar.xz -C /tmp \
+    && cd /tmp/dpdk-stable-${DPDK_VERSION} \
+    && meson setup ${DPDK_BUILD_DIR} \
+        --prefix=${DPDK_INSTALL_PREFIX} \
+        -Dtests=false \
+        -Denable_docs=false \
+        -Ddisable_drivers=baseband/*,bus/ifpga/*,common/cpt,common/dpaax,common/iavf,common/octeontx,common/octeontx2,crypto/nitrox,net/ark,net/atlantic,net/avp,net/axgbe,net/bnx2x,net/bnxt,net/cxgbe,net/e1000,net/ena,net/enic,net/fm10k,net/hinic,net/hns3,net/i40e,net/ixgbe,vdpa/ifc,net/igc,net/liquidio,net/netvsc,net/nfp,net/qede,net/sfc,net/thunderx,net/vdev_netvsc,net/vmxnet3,regex/octeontx2 \
+    && cd ${DPDK_BUILD_DIR} \
+    && ninja \
+    && meson install \
+    && ldconfig \
+    && rm -rf /tmp/dpdk-stable-${DPDK_VERSION} /tmp/dpdk-stable-${DPDK_VERSION}.tar.xz ${DPDK_BUILD_DIR} /tmp/dpdk_patches
 
 # Configure the DOCA APT repository for mlnx-ofed-kernel-utils
 # (needed for ibdev2netdev utility used by tune_system.py)
@@ -177,7 +176,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ==============================================================
-# gpunetio: Add DOCA SDK packages for GPUNetIO support
+# gpunetio: DOCA SDK packages for GPUNetIO support
+# STATUS: EXPERIMENTAL — DOCA GPUNetio is NOT currently supported
+#         by holoscan-networking. Retained for future evaluation.
 # ==============================================================
 FROM dpdk AS gpunetio
 

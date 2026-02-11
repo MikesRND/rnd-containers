@@ -85,18 +85,12 @@ RUN test -n "${HOLOSCAN_VER}" || { echo "ERROR: HOLOSCAN_VER build-arg is requir
 
 ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 
-# ── mlnx-dpdk + ANO operator (ConnectX-7 / H200 support) ─
-# mlnx-dpdk-dev is pinned implicitly by DOCA_VERSION (3.2.1) configured in layer 1.
-# --allow-downgrades handles possible libibverbs version differences from layer 1.
-RUN DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --allow-downgrades \
-        mlnx-dpdk-dev \
-    && rm -rf /var/lib/apt/lists/*
+# ── ANO operator (ConnectX-7 / H200 support) ─────────────
+# holoscan-networking links against upstream DPDK 24.11.3 built from
+# source in Layer 1 (dpdk stage), installed to /usr/local.
+# mlnx-dpdk-dev is NOT needed for the dpdk backend.
 
-# Ensure pkg-config finds mlnx-dpdk (installed to /opt/mellanox/dpdk/)
-ENV PKG_CONFIG_PATH="/opt/mellanox/dpdk/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}"
-
-# Build holoscan-networking package from HoloHub (DPDK backend).
+# Build holoscan-networking package from HoloHub (upstream DPDK backend).
 # Top-level build generates CMake export targets (holoscan-networkingConfig.cmake)
 # so downstream projects can use find_package(holoscan-networking).
 # Installs libs, headers, cmake configs, and example apps to /opt/nvidia/holoscan/.
