@@ -6,13 +6,6 @@ LABEL description="ANO development container"
 
 SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 
-# Version info (injected at build time)
-ARG CONTAINER_VERSION=dev
-ARG GIT_COMMIT=unknown
-
-ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
-    GIT_COMMIT=${GIT_COMMIT}
-
 # Ensure /workspace exists (base image may not provide it)
 RUN mkdir -p /workspace
 
@@ -59,6 +52,12 @@ RUN { echo '# Container version info banner'; \
     && chmod +x /etc/profile.d/01-container-motd.sh \
     && printf '\n# Container MOTD for non-login interactive shells\nif [ -n "${PS1:-}" ]; then\n    . /etc/profile.d/01-container-motd.sh\nfi\n' \
       >> /etc/bash.bashrc
+
+# Version info (injected at build time – placed late to avoid cache-busting heavy layers)
+ARG CONTAINER_VERSION=dev
+ARG GIT_COMMIT=unknown
+ENV CONTAINER_VERSION=${CONTAINER_VERSION} \
+    GIT_COMMIT=${GIT_COMMIT}
 
 WORKDIR /workspace
 CMD ["bash"]

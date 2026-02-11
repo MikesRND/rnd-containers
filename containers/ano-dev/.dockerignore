@@ -1,0 +1,5 @@
+VERSION
+Makefile
+README.md
+docker-compose.yml
+.dockerignore
