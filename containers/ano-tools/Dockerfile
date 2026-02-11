@@ -168,8 +168,3 @@ RUN mkdir -p /tmp/builds \
     && cd / \
     && rm -rf /tmp/builds
 
-# ── ccache environment ────────────────────────────────────
-ENV CCACHE_DIR=/workspace/.ccache
-ENV CMAKE_C_COMPILER_LAUNCHER=ccache
-ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache
-ENV CMAKE_CUDA_COMPILER_LAUNCHER=ccache
