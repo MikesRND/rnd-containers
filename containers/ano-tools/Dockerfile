@@ -113,6 +113,7 @@ RUN cd /workspace/holohub \
         -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
         -DBUILD_TESTING=OFF \
     && cmake --build build -j$(nproc) \
+    && mkdir -p build/python/lib/holohub \
     && cmake --install build --prefix /opt/nvidia/holoscan \
     && rm -rf build
 
