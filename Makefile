@@ -9,9 +9,9 @@ REGISTRY        ?= docker.io
 IMAGE_NAMESPACE ?= mikesrnd
 IMAGE_SOURCE    ?= https://github.com/$(IMAGE_NAMESPACE)/rnd-containers
 PROJECT         ?= ano
-CUDA_VER        ?= 13.1
 CUDA_PATCH      ?= 13.1.0
-CUDA_FLAVOR     ?= base
+CUDA_VER        := $(word 1,$(subst ., ,$(CUDA_PATCH))).$(word 2,$(subst ., ,$(CUDA_PATCH)))
+CUDA_FLAVOR     ?= devel
 CUDA_ARCHS      ?= all
 UBUNTU_VER      ?= 22
 
@@ -88,7 +88,6 @@ ano-tools: holohub-dpdk ## Build layer-2 SDK image
 	docker build \
 		--build-arg BASE_IMAGE=$(HOLOHUB_TAG)-dpdk \
 		--build-arg HOLOSCAN_VER=$(HOLOSCAN_VER) \
-		--build-arg CUDA_VER=$(CUDA_VER) \
 		--build-arg CUDA_ARCHS="$(CUDA_ARCHS)" \
 		-t $(ANO_TOOLS_TAG) \
 		-f containers/ano-tools/Dockerfile \
@@ -112,7 +111,7 @@ configure: ## Persist build settings to config.mk
 	@echo "REGISTRY        := $(REGISTRY)"        >> config.mk
 	@echo "IMAGE_NAMESPACE := $(IMAGE_NAMESPACE)" >> config.mk
 	@echo "IMAGE_SOURCE    := $(IMAGE_SOURCE)"    >> config.mk
-	@echo "CUDA_VER        := $(CUDA_VER)"        >> config.mk
+	@echo "CUDA_PATCH      := $(CUDA_PATCH)"      >> config.mk
 	@echo "CUDA_ARCHS      := $(CUDA_ARCHS)"      >> config.mk
 	@echo "Saved config.mk"
 
@@ -125,6 +124,8 @@ show-config: ## Print effective build settings
 	@echo "  IMAGE_SOURCE    = $(IMAGE_SOURCE)"
 	@echo "  HOLOHUB_TAG     = $(HOLOHUB_TAG)"
 	@echo "  ANO_TOOLS_TAG   = $(ANO_TOOLS_TAG)"
+	@echo "  BASE_IMAGE      = $(BASE_IMAGE)"
+	@echo "  CUDA_VER        = $(CUDA_VER)"
 	@echo "  BASE_TAG        = $(BASE_TAG)"
 	@echo "  CUDA_ARCHS      = $(CUDA_ARCHS)"
 

@@ -16,7 +16,7 @@ COMPOSE_SERVICE      := ano-dev
 COMPOSE_BUILD_TARGET :=
 
 # Pass version info into Docker build for MOTD
-# SDK version args (HOLOSCAN_VER, CUDA_VER) are baked into the ano-tools layer.
+# SDK version args (HOLOSCAN_VER, CUDA_PATCH) are baked into the ano-tools layer.
 DOCKER_BUILD_ARGS = \
     --build-arg BASE_IMAGE=$(ANO_TOOLS_TAG) \
     --build-arg CONTAINER_VERSION=$(VER_SEMVER) \

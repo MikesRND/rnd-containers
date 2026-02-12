@@ -4,7 +4,7 @@ Dev container for GPU Algorithms work aligned to a specific Holoscan and Holohub
 
 ## Build
 - From rnd-containers repo root: `make ano-dev`
-- Required vars (can be set via `make configure` -> `config.mk`): `HOLOSCAN_VER`, `CUDA_VER`; optional `VER_SEMVER`, `VER_GIT_COMMIT` for labels.
+- Required vars (can be set via `make configure` -> `config.mk`): `HOLOSCAN_VER`, `CUDA_PATCH`; optional `VER_SEMVER`, `VER_GIT_COMMIT` for labels.
 
 ## Run
 - From rnd-containers repo root: `make -C containers/ano-dev compose-up` (or `compose-shell` for an interactive shell)
@@ -14,7 +14,7 @@ Dev container for GPU Algorithms work aligned to a specific Holoscan and Holohub
 ## Contents
 - Holoscan SDK deb installed under `/opt/nvidia/holoscan`
 - Holohub cloned at `holoscan-sdk-${HOLOSCAN_VER}` and `holohub setup` pre-run
-- CUDA toolkit `${CUDA_VER}`, GCC 13 as default, Python 3.12 venv with holoscan-cli
+- CUDA toolkit `${CUDA_PATCH}`, GCC 13 as default, Python 3.12 venv with holoscan-cli
 - Source builds: GTest, nvbench, spdlog (header-only copy), Taskflow
 
 ## Usage

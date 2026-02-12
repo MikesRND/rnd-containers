@@ -26,19 +26,9 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 # SDK/dev pip packages (project-specific packages are installed in Layer 3)
 RUN pip install --no-cache-dir holoscan-cli pytest setuptools
 
-# ── CUDA development toolchain ────────────────────────────
-# Guard: fail fast if CUDA_VER was not passed via --build-arg.
-ARG CUDA_VER
+# ── CUDA development toolchain (provided by devel base image) ─
 ARG CUDA_ARCHS
 RUN test -n "${CUDA_ARCHS}" || { echo "ERROR: CUDA_ARCHS build-arg is required"; exit 1; }
-RUN test -n "${CUDA_VER}" || { echo "ERROR: CUDA_VER build-arg is required"; exit 1; } \
-    && CUDA_APT_SUFFIX=$(echo "${CUDA_VER}" | tr '.' '-') \
-    && DEBIAN_FRONTEND=noninteractive apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        cuda-toolkit-${CUDA_APT_SUFFIX} \
-    && rm -rf /var/lib/apt/lists/* \
-    && nvcc --version | grep -q "release ${CUDA_VER}" \
-    || { echo "ERROR: nvcc version does not match CUDA_VER=${CUDA_VER}"; exit 1; }
 
 ENV CUDA_HOME=/usr/local/cuda
 ENV PATH="${CUDA_HOME}/bin:$PATH"
