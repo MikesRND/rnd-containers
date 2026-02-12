@@ -87,9 +87,10 @@ holoscan_sdk_ver="${holoscan_cli_ver}"
 holohub_tag=$(sed -n 's|.* refs/tags/\(.*\)|\1|p' /workspace/holohub/.git/packed-refs 2>/dev/null | head -1)
 
 # Networking
-dpdk_ver=$(dpkg_ver mlnx-dpdk-dev | sed 's/-.*//')
+dpdk_ver=$(pkg-config --modversion libdpdk 2>/dev/null)
 ofed_ver=$(ofed_info -s 2>/dev/null | grep -oP 'MLNX_OFED_LINUX-\K[\d.]+' | head -1)
 [[ -z "$ofed_ver" ]] && ofed_ver=$(dpkg_ver mlnx-ofed-kernel-utils | grep -oP '^\d+\.\d+')
+doca_ver="${DOCA_VERSION:-}"
 
 # C++ Libraries
 boost_ver=$(dpkg_ver libboost-all-dev | grep -oP '^\d+\.\d+\.\d+')
@@ -125,7 +126,7 @@ row "Python"      "$python_ver${venv_name:+ (venv: $venv_name)}"
 row "Py Packages" "$(join "$(tag vrtigo "$vrtigo_ver")" "$(tag holoscan-cli "$holoscan_cli_ver")" "$(tag pytest "$pytest_ver")")"
 cont              "$(join "$(tag scipy "$scipy_ver")" "$(tag pyqtgraph "$pyqtgraph_ver")" "$(tag PyQt6 "$pyqt6_ver")" "$(tag mkdocs "$mkdocs_ver")")"
 row "Holoscan"    "$(join "$(tag SDK "$holoscan_sdk_ver")" "$(tag HoloHub "$holohub_tag")")"
-row "Networking"  "$(join "$(tag mlnx-dpdk "$dpdk_ver")" "$(tag "MLNX OFED" "$ofed_ver")")"
+row "Networking"  "$(join "$(tag DOCA "$doca_ver")" "$(tag OFED "$ofed_ver")" "$(tag DPDK "$dpdk_ver")")"
 row "C++ Libs"    "$(join "$(tag Boost "$boost_ver")" "$(tag GTest "$gtest_ver")" "$(tag spdlog "$spdlog_ver")")"
 cont              "$(join "$(tag Taskflow "$taskflow_ver")" "$(tag Poco "$poco_ver")" "$(tag yaml-cpp "$yamlcpp_ver")")"
 row "Tools"       "$(join "$(tag git "$git_ver")" "$(tag doxygen "$doxygen_ver")" "$(tag vim "$vim_ver")")"
