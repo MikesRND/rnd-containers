@@ -12,7 +12,7 @@ PROJECT         ?= ano
 CUDA_VER        ?= 13.1
 CUDA_PATCH      ?= 13.1.0
 CUDA_FLAVOR     ?= base
-CUDA_ARCHS      ?= 80;86;89;90;120
+CUDA_ARCHS      ?= all
 UBUNTU_VER      ?= 22
 
 _HOLO_TAG   := holo$(HOLOSCAN_VER)

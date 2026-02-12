@@ -29,7 +29,8 @@ RUN pip install --no-cache-dir holoscan-cli pytest setuptools
 # ── CUDA development toolchain ────────────────────────────
 # Guard: fail fast if CUDA_VER was not passed via --build-arg.
 ARG CUDA_VER
-ARG CUDA_ARCHS="80;86;89;90"
+ARG CUDA_ARCHS
+RUN test -n "${CUDA_ARCHS}" || { echo "ERROR: CUDA_ARCHS build-arg is required"; exit 1; }
 RUN test -n "${CUDA_VER}" || { echo "ERROR: CUDA_VER build-arg is required"; exit 1; } \
     && CUDA_APT_SUFFIX=$(echo "${CUDA_VER}" | tr '.' '-') \
     && DEBIAN_FRONTEND=noninteractive apt-get update \
