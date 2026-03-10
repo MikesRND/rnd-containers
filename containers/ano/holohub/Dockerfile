@@ -121,6 +121,7 @@ FROM base-deps AS dpdk
 ARG DPDK_VERSION=24.11.3
 ARG DPDK_BUILD_DIR=/opt/dpdk-build
 ARG DPDK_INSTALL_PREFIX=/usr/local
+ARG DPDK_MACHINE=icelake-server
 ARG DOCA_VERSION=3.2.1
 ENV DOCA_VERSION=${DOCA_VERSION}
 
@@ -139,11 +140,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libnuma-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz -o /tmp/dpdk-${DPDK_VERSION}.tar.xz \
+# Pin CPU target on x86 to avoid AVX-512 auto-detection mismatches;
+# arm64 lets meson auto-detect.
+RUN DPDK_CPU_FLAG="" \
+    && if [ "${TARGETARCH}" = "amd64" ]; then \
+        DPDK_CPU_FLAG="-Dcpu_instruction_set=${DPDK_MACHINE}"; \
+    fi \
+    && curl -fsSL https://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz -o /tmp/dpdk-${DPDK_VERSION}.tar.xz \
     && tar xf /tmp/dpdk-${DPDK_VERSION}.tar.xz -C /tmp \
     && cd /tmp/dpdk-stable-${DPDK_VERSION} \
     && meson setup ${DPDK_BUILD_DIR} \
         --prefix=${DPDK_INSTALL_PREFIX} \
+        ${DPDK_CPU_FLAG} \
         -Dtests=false \
         -Denable_docs=false \
         -Ddisable_drivers=baseband/*,bus/ifpga/*,common/cpt,common/dpaax,common/iavf,common/octeontx,common/octeontx2,crypto/nitrox,net/ark,net/atlantic,net/avp,net/axgbe,net/bnx2x,net/bnxt,net/cxgbe,net/e1000,net/ena,net/enic,net/fm10k,net/hinic,net/hns3,net/i40e,net/ixgbe,vdpa/ifc,net/igc,net/liquidio,net/netvsc,net/nfp,net/qede,net/sfc,net/thunderx,net/vdev_netvsc,net/vmxnet3,regex/octeontx2 \
