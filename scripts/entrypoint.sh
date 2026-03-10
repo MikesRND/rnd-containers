@@ -61,13 +61,20 @@ if [ -d "$WORK_DIR" ]; then
 fi
 
 # ── Exec ────────────────────────────────────────────────────
+# Use setpriv instead of su to preserve ambient capabilities from
+# privileged containers (needed for DPDK, GPUDirect, hugepages, etc.)
+SETPRIV="setpriv --reuid=$USER_ID --regid=$GROUP_ID --init-groups"
+if grep -q '^CapInh:.*[^0]' /proc/1/status 2>/dev/null; then
+    SETPRIV="$SETPRIV --inh-caps=+all --ambient-caps=+all"
+fi
+
 if [ $# -eq 0 ]; then
     echo "[entrypoint] Launching interactive shell for $USER_NAME in $WORK_DIR"
-    exec su - "$USER_NAME" -c "cd '$WORK_DIR' && exec bash"
+    exec $SETPRIV -- bash -c "cd '$WORK_DIR' && exec bash --login"
 elif [ "$1" = "sleep" ] && [ "$2" = "infinity" ]; then
     echo "[entrypoint] Keeping container alive (workdir: $WORK_DIR)"
-    exec su - "$USER_NAME" -c "cd '$WORK_DIR' && exec sleep infinity"
+    exec $SETPRIV -- bash -c "cd '$WORK_DIR' && exec sleep infinity"
 else
     echo "[entrypoint] Executing as $USER_NAME in $WORK_DIR: $*"
-    exec su - "$USER_NAME" -c "cd '$WORK_DIR' && exec \"\$@\"" -- "$@"
+    exec $SETPRIV -- bash -c "cd '$WORK_DIR' && exec \"\$@\"" -- "$@"
 fi
