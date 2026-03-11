@@ -109,6 +109,7 @@ yamlcpp_ver=$(dpkg_ver libyaml-cpp-dev | grep -oP '^\d+\.\d+\.\d+')
 
 # Tools
 git_ver=$(git --version 2>/dev/null | awk '{print $3}')
+gdb_ver=$(gdb --version 2>/dev/null | head -1 | grep -oP '[\d.]+$')
 doxygen_ver=$(doxygen --version 2>/dev/null)
 vim_ver=$(vim --version 2>/dev/null | head -1 | grep -oP 'IMproved \K[\d.]+')
 
@@ -129,7 +130,7 @@ row "Holoscan"    "$(join "$(tag SDK "$holoscan_sdk_ver")" "$(tag HoloHub "$holo
 row "Networking"  "$(join "$(tag DOCA "$doca_ver")" "$(tag OFED "$ofed_ver")" "$(tag DPDK "$dpdk_ver")")"
 row "C++ Libs"    "$(join "$(tag Boost "$boost_ver")" "$(tag GTest "$gtest_ver")" "$(tag spdlog "$spdlog_ver")")"
 cont              "$(join "$(tag Taskflow "$taskflow_ver")" "$(tag Poco "$poco_ver")" "$(tag yaml-cpp "$yamlcpp_ver")")"
-row "Tools"       "$(join "$(tag git "$git_ver")" "$(tag doxygen "$doxygen_ver")" "$(tag vim "$vim_ver")")"
+row "Tools"       "$(join "$(tag git "$git_ver")" "$(tag gdb "$gdb_ver")" "$(tag doxygen "$doxygen_ver")" "$(tag vim "$vim_ver")")"
 
 echo "  ─────────────────────────────────────────────"
 echo ""

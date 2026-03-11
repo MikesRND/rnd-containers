@@ -48,6 +48,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         vim \
         wget \
+        gdb \
         clang-format \
         clang-tidy \
         lcov \
@@ -101,6 +102,10 @@ RUN cd /workspace/holohub \
     && mkdir -p build/python/lib/holohub \
     && cmake --install build --prefix /opt/nvidia/holoscan \
     && rm -rf build
+
+# ── Holoscan-networking rebuild helper ──────────────────────
+COPY scripts/rebuild-holoscan-networking.sh /usr/local/bin/rebuild-holoscan-networking
+RUN chmod +x /usr/local/bin/rebuild-holoscan-networking
 
 # ── Source builds (GTest, nvbench, spdlog, Taskflow) ──────
 RUN mkdir -p /tmp/builds \
