@@ -82,16 +82,23 @@ ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 # source in Layer 1 (dpdk stage), installed to /usr/local.
 # mlnx-dpdk-dev is NOT needed for the dpdk backend.
 
-# Build holoscan-networking package from HoloHub (upstream DPDK backend).
+# Build holoscan-networking package and networking example apps from HoloHub.
 # Top-level build generates CMake export targets (holoscan-networkingConfig.cmake)
 # so downstream projects can use find_package(holoscan-networking).
 # Installs libs, headers, cmake configs, and example apps to /opt/nvidia/holoscan/.
-# Fix: adv_networking_bench hardcodes compute_70 which CUDA 13+ dropped.
+# Fix: adv_networking_bench and network_radar_pipeline hardcode compute_70
+# which CUDA 13+ dropped.
 RUN cd /workspace/holohub \
     && sed -i 's/set(CMAKE_CUDA_ARCHITECTURES "70;80;90")/set(CMAKE_CUDA_ARCHITECTURES "'"${CUDA_ARCHS}"'")/' \
         applications/adv_networking_bench/cpp/CMakeLists.txt \
+        applications/network_radar_pipeline/cpp/CMakeLists.txt \
+    && sed -i 's/CUDA_ARCHITECTURES "80;90"/CUDA_ARCHITECTURES "'"${CUDA_ARCHS}"'"/' \
+        applications/network_radar_pipeline/cpp/CMakeLists.txt \
     && cmake -B build \
         -DPKG_holoscan-networking=ON \
+        -DAPP_adv_networking_bench=ON \
+        -DAPP_basic_networking_ping=ON \
+        -DAPP_network_radar_pipeline=ON \
         -DANO_MGR=dpdk \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
