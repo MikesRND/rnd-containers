@@ -101,7 +101,8 @@ cmake -B "$HOLOHUB_DIR/build" -S "$HOLOHUB_DIR" \
     -DCMAKE_CUDA_ARCHITECTURES="$CUDA_ARCHS" \
     -DHOLOHUB_BUILD_PYTHON=OFF \
     -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
-    -DBUILD_TESTING=OFF
+    -DBUILD_TESTING=OFF \
+    -DCCCL_ROOT=/usr/local/cuda/lib64/cmake/cccl  # use system CCCL 2.8; MatX CPM fetches old 2.2 which lacks sm<60 support
 
 # ── Build ─────────────────────────────────────────────────
 echo "Building..."

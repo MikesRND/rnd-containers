@@ -105,6 +105,7 @@ RUN cd /workspace/holohub \
         -DHOLOHUB_BUILD_PYTHON=OFF \
         -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
         -DBUILD_TESTING=OFF \
+        -DCCCL_ROOT=/usr/local/cuda/lib64/cmake/cccl \  # use system CCCL 2.8; MatX CPM fetches old 2.2 which lacks sm<60 support
     && cmake --build build -j$(nproc) \
     && mkdir -p build/python/lib/holohub \
     && cmake --install build --prefix /opt/nvidia/holoscan \
