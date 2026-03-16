@@ -78,16 +78,11 @@ if [[ "$CLEAN" == true && -d "$HOLOHUB_DIR/build" ]]; then
 fi
 
 # ── Patch CUDA architectures ──────────────────────────────
-for cmake_file in \
-    "$HOLOHUB_DIR/applications/adv_networking_bench/cpp/CMakeLists.txt" \
-    "$HOLOHUB_DIR/applications/network_radar_pipeline/cpp/CMakeLists.txt"; do
-    if [[ -f "$cmake_file" ]]; then
-        sed -i 's/set(CMAKE_CUDA_ARCHITECTURES "[^"]*")/set(CMAKE_CUDA_ARCHITECTURES "'"$CUDA_ARCHS"'")/' \
-            "$cmake_file"
-        sed -i 's/CUDA_ARCHITECTURES "[0-9;]*"/CUDA_ARCHITECTURES "'"$CUDA_ARCHS"'"/' \
-            "$cmake_file"
-    fi
-done
+BENCH_CMAKE="$HOLOHUB_DIR/applications/adv_networking_bench/cpp/CMakeLists.txt"
+if [[ -f "$BENCH_CMAKE" ]]; then
+    sed -i 's/set(CMAKE_CUDA_ARCHITECTURES "[^"]*")/set(CMAKE_CUDA_ARCHITECTURES "'"$CUDA_ARCHS"'")/' \
+        "$BENCH_CMAKE"
+fi
 
 # ── Configure ─────────────────────────────────────────────
 echo "Configuring..."
@@ -95,14 +90,12 @@ cmake -B "$HOLOHUB_DIR/build" -S "$HOLOHUB_DIR" \
     -DPKG_holoscan-networking=ON \
     -DAPP_adv_networking_bench=ON \
     -DAPP_basic_networking_ping=ON \
-    -DAPP_network_radar_pipeline=ON \
     -DANO_MGR=dpdk \
     -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
     -DCMAKE_CUDA_ARCHITECTURES="$CUDA_ARCHS" \
     -DHOLOHUB_BUILD_PYTHON=OFF \
     -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
-    -DBUILD_TESTING=OFF \
-    -DCCCL_ROOT=/usr/local/cuda/lib64/cmake/cccl  # use system CCCL 2.8; MatX CPM fetches old 2.2 which lacks sm<60 support
+    -DBUILD_TESTING=OFF
 
 # ── Build ─────────────────────────────────────────────────
 echo "Building..."

@@ -86,27 +86,20 @@ ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 # Top-level build generates CMake export targets (holoscan-networkingConfig.cmake)
 # so downstream projects can use find_package(holoscan-networking).
 # Installs libs, headers, cmake configs, and example apps to /opt/nvidia/holoscan/.
-# Fix: adv_networking_bench and network_radar_pipeline hardcode compute_70
-# which CUDA 13+ dropped.
-# CCCL_ROOT: force system CCCL 2.8; MatX CPM fetches old 2.2 which lacks sm<60 support.
+# Fix: adv_networking_bench hardcodes compute_70 which CUDA 13+ dropped.
 RUN cd /workspace/holohub \
     && sed -i 's/set(CMAKE_CUDA_ARCHITECTURES "70;80;90")/set(CMAKE_CUDA_ARCHITECTURES "'"${CUDA_ARCHS}"'")/' \
         applications/adv_networking_bench/cpp/CMakeLists.txt \
-        applications/network_radar_pipeline/cpp/CMakeLists.txt \
-    && sed -i 's/CUDA_ARCHITECTURES "80;90"/CUDA_ARCHITECTURES "'"${CUDA_ARCHS}"'"/' \
-        applications/network_radar_pipeline/cpp/CMakeLists.txt \
     && cmake -B build \
         -DPKG_holoscan-networking=ON \
         -DAPP_adv_networking_bench=ON \
         -DAPP_basic_networking_ping=ON \
-        -DAPP_network_radar_pipeline=ON \
         -DANO_MGR=dpdk \
         -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
         -DHOLOHUB_BUILD_PYTHON=OFF \
         -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
         -DBUILD_TESTING=OFF \
-        -DCCCL_ROOT=/usr/local/cuda/lib64/cmake/cccl \
     && cmake --build build -j$(nproc) \
     && mkdir -p build/python/lib/holohub \
     && cmake --install build --prefix /opt/nvidia/holoscan \
