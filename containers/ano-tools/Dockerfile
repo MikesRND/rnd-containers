@@ -88,6 +88,7 @@ ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data
 # Installs libs, headers, cmake configs, and example apps to /opt/nvidia/holoscan/.
 # Fix: adv_networking_bench and network_radar_pipeline hardcode compute_70
 # which CUDA 13+ dropped.
+# CCCL_ROOT: force system CCCL 2.8; MatX CPM fetches old 2.2 which lacks sm<60 support.
 RUN cd /workspace/holohub \
     && sed -i 's/set(CMAKE_CUDA_ARCHITECTURES "70;80;90")/set(CMAKE_CUDA_ARCHITECTURES "'"${CUDA_ARCHS}"'")/' \
         applications/adv_networking_bench/cpp/CMakeLists.txt \
@@ -105,7 +106,7 @@ RUN cd /workspace/holohub \
         -DHOLOHUB_BUILD_PYTHON=OFF \
         -DHOLOHUB_DOWNLOAD_DATASETS=OFF \
         -DBUILD_TESTING=OFF \
-        -DCCCL_ROOT=/usr/local/cuda/lib64/cmake/cccl \  # use system CCCL 2.8; MatX CPM fetches old 2.2 which lacks sm<60 support
+        -DCCCL_ROOT=/usr/local/cuda/lib64/cmake/cccl \
     && cmake --build build -j$(nproc) \
     && mkdir -p build/python/lib/holohub \
     && cmake --install build --prefix /opt/nvidia/holoscan \
