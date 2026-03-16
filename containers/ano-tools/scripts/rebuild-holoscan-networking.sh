@@ -1,11 +1,11 @@
 #!/bin/bash
 # rebuild-holoscan-networking — Rebuild and reinstall holoscan-networking
-# from the mounted /workspace/holohub source tree.
+# from a HoloHub source tree.
 #
 # Must be run as root (install target is /opt/nvidia/holoscan).
 set -euo pipefail
 
-HOLOHUB_DIR="/workspace/holohub"
+HOLOHUB_DIR=""
 INSTALL_PREFIX="/opt/nvidia/holoscan"
 BUILD_TYPE="Release"
 CUDA_ARCHS="native"
@@ -15,18 +15,25 @@ usage() {
     cat <<EOF
 Usage: rebuild-holoscan-networking [OPTIONS]
 
-Rebuild and reinstall holoscan-networking from /workspace/holohub.
+Rebuild and reinstall holoscan-networking from a HoloHub source tree.
+
+Source discovery (first match wins):
+    --source DIR   Use DIR explicitly
+    /workspace/holohub-dev   (bind-mounted dev checkout)
+    /workspace/holohub       (image-baked copy)
 
 OPTIONS:
-    --debug     Build with CMAKE_BUILD_TYPE=Debug
-    --clean     Remove existing build directory before building
-    --archs A   Set CUDA architectures (default: native)
-    -h, --help  Show this help message
+    --source DIR  Use DIR as HoloHub source (skip auto-discovery)
+    --debug       Build with CMAKE_BUILD_TYPE=Debug
+    --clean       Remove existing build directory before building
+    --archs A     Set CUDA architectures (default: native)
+    -h, --help    Show this help message
 EOF
 }
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --source)  HOLOHUB_DIR="$2"; shift 2 ;;
         --debug)   BUILD_TYPE="Debug"; shift ;;
         --clean)   CLEAN=true; shift ;;
         --archs)   CUDA_ARCHS="$2"; shift 2 ;;
@@ -35,17 +42,33 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# ── Validate source tree ───────────────────────────────────
-if [[ ! -d "$HOLOHUB_DIR/.git" ]]; then
-    echo "ERROR: $HOLOHUB_DIR/.git not found." >&2
-    echo "This script requires a live HoloHub git checkout mounted at $HOLOHUB_DIR." >&2
+# ── Discover source tree ──────────────────────────────────
+ANO_MARKER="operators/advanced_network/CMakeLists.txt"
+if [[ -n "$HOLOHUB_DIR" ]]; then
+    # Explicit --source: validate immediately
+    if [[ ! -f "$HOLOHUB_DIR/$ANO_MARKER" ]]; then
+        echo "ERROR: $HOLOHUB_DIR/$ANO_MARKER not found." >&2
+        echo "The --source directory does not contain an ANO source tree." >&2
+        exit 1
+    fi
+elif [[ -f "/workspace/holohub-dev/$ANO_MARKER" ]]; then
+    HOLOHUB_DIR="/workspace/holohub-dev"
+elif [[ -f "/workspace/holohub/$ANO_MARKER" ]]; then
+    HOLOHUB_DIR="/workspace/holohub"
+else
+    echo "ERROR: No HoloHub source tree found at /workspace/holohub-dev or /workspace/holohub" >&2
+    echo "Mount a checkout or use --source DIR." >&2
     exit 1
 fi
 
 # ── Print source identity ─────────────────────────────────
-branch=$(git -C "$HOLOHUB_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
-commit=$(git -C "$HOLOHUB_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
-echo "HoloHub source: branch=$branch commit=$commit"
+if [[ -d "$HOLOHUB_DIR/.git" ]]; then
+    branch=$(git -C "$HOLOHUB_DIR" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "detached")
+    commit=$(git -C "$HOLOHUB_DIR" rev-parse HEAD 2>/dev/null || echo "unknown")
+    echo "HoloHub source: $HOLOHUB_DIR  branch=$branch commit=$commit"
+else
+    echo "HoloHub source: $HOLOHUB_DIR  (no .git — image-baked copy)"
+fi
 echo "Build type: $BUILD_TYPE  CUDA archs: $CUDA_ARCHS"
 
 # ── Clean if requested ────────────────────────────────────
