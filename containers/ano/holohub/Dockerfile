@@ -152,6 +152,7 @@ RUN DPDK_CPU_FLAG="" \
     && meson setup ${DPDK_BUILD_DIR} \
         --prefix=${DPDK_INSTALL_PREFIX} \
         ${DPDK_CPU_FLAG} \
+        -Dmax_lcores=256 \
         -Dtests=false \
         -Denable_docs=false \
         -Ddisable_drivers=baseband/*,bus/ifpga/*,common/cpt,common/dpaax,common/iavf,common/octeontx,common/octeontx2,crypto/nitrox,net/ark,net/atlantic,net/avp,net/axgbe,net/bnx2x,net/bnxt,net/cxgbe,net/e1000,net/ena,net/enic,net/fm10k,net/hinic,net/hns3,net/i40e,net/ixgbe,vdpa/ifc,net/igc,net/liquidio,net/netvsc,net/nfp,net/qede,net/sfc,net/thunderx,net/vdev_netvsc,net/vmxnet3,regex/octeontx2 \
