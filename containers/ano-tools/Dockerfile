@@ -64,15 +64,34 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 # NOTE: The venv is auto-activated via ENV above, so all pip installs
 # (including anything holohub setup runs internally) land in the
 # Python 3.12 venv, not system Python 3.10. This is intentional.
-# Guard: fail fast if HOLOSCAN_VER was not passed via --build-arg.
+# Guard: fail fast if HOLOSCAN_VER / CUDA_VER were not passed via --build-arg.
 ARG HOLOSCAN_VER
+ARG CUDA_VER
+# Pin libnvinfer-safe-headers-dev to match what holohub setup will select.
+# Without this, apt prefers a newer +cuda13.x build from the same repo,
+# which breaks libnvinfer-dev's exact-version dependency.
+# Match on CUDA major line (e.g. +cuda12.) so the pin stays aligned with
+# upstream even if NVIDIA publishes newer 12.x TensorRT builds.
 RUN test -n "${HOLOSCAN_VER}" || { echo "ERROR: HOLOSCAN_VER build-arg is required"; exit 1; } \
+    && test -n "${CUDA_VER}" || { echo "ERROR: CUDA_VER build-arg is required"; exit 1; } \
     && mkdir -p /workspace \
+    && CUDA_MAJOR="$(echo "${CUDA_VER}" | cut -d. -f1)" \
+    && apt-get update \
+    && apt-cache madison libnvinfer10 > /tmp/nvinfer_madison.txt \
+    && TRT_VER="$(grep -m1 -F "+cuda${CUDA_MAJOR}." /tmp/nvinfer_madison.txt \
+        | cut -d'|' -f2 | tr -d ' ')" \
+    && rm -f /tmp/nvinfer_madison.txt \
+    && test -n "${TRT_VER}" \
+       || { echo "ERROR: no libnvinfer10 version matching +cuda${CUDA_MAJOR}.*" >&2; \
+            apt-cache madison libnvinfer10 >&2; exit 1; } \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends --allow-downgrades \
+         "libnvinfer-safe-headers-dev=${TRT_VER}" \
     && cd /workspace \
     && git clone --branch holoscan-sdk-${HOLOSCAN_VER} --depth 1 \
         https://github.com/nvidia-holoscan/holohub.git \
     && chmod +x /workspace/holohub/holohub \
     && /workspace/holohub/holohub setup \
+    && rm -rf /var/lib/apt/lists/* \
     && echo ". /etc/bash_completion.d/holohub_autocomplete" >> /etc/bash.bashrc
 
 ENV HOLOSCAN_INPUT_PATH=/workspace/holohub/data

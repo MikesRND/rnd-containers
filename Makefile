@@ -88,6 +88,7 @@ ano-tools: holohub-dpdk ## Build layer-2 SDK image
 	docker build \
 		--build-arg BASE_IMAGE=$(HOLOHUB_TAG)-dpdk \
 		--build-arg HOLOSCAN_VER=$(HOLOSCAN_VER) \
+		--build-arg CUDA_VER=$(CUDA_VER) \
 		--build-arg CUDA_ARCHS="$(CUDA_ARCHS)" \
 		-t $(ANO_TOOLS_TAG) \
 		-f containers/ano-tools/Dockerfile \
