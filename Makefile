@@ -45,9 +45,51 @@ export REGISTRY
 export IMAGE_NAMESPACE
 export IMAGE_SOURCE
 
+# ── Framework (DAQIRI-only, Holoscan-free) stack ─────────────
+# Independent of the ANO/HoloHub layers above. Targets the DAQIRI-aligned
+# CUDA 13.1 / Ubuntu 24.04 platform and mirrors DAQIRI's DPDK/DOCA/DAQIRI
+# build. FRAMEWORK_CUDA_ARCHS is a stack-level knob (separate from the
+# legacy CUDA_ARCHS) mapped to the Docker CUDA_ARCHS build-arg.
+FRAMEWORK_BASE_IMAGE ?= nvcr.io/nvidia/cuda:13.1.0-devel-ubuntu24.04
+FRAMEWORK_BASE_TAG   ?= framework-base-cuda13.1-ubu24-devel
+FRAMEWORK_SDK_TAG    ?= framework-sdk
+
+# Default device-code targets: native (real) SASS for exactly the deployment
+# fleet, so every target GPU loads a precompiled cubin (no JIT, no reliance on
+# minor-version forward compatibility).
+#
+#   arch      compute cap   GPUs
+#   --------  -----------   ----------------------------------------------
+#   89-real   sm_89         RTX 2000 Ada (Ada Lovelace)
+#   90-real   sm_90         H200 NVL (Hopper)
+#   120-real  sm_120        RTX 5060 (this host), RTX PRO 2000 Blackwell
+#   121-real  sm_121        DGX Spark / GB10 (Blackwell)
+#
+# Build speed: nvcc compiles every kernel once PER arch, so this 4-arch list
+# is ~3x less device compilation (and much less RAM) than the ~12-arch CUDA
+# 13.1 `all`. Override for wider coverage at the cost of build time/size, e.g.
+#   make framework-dev FRAMEWORK_CUDA_ARCHS=all
+# (Adding/removing a GPU family? edit the list to match its compute cap.)
+FRAMEWORK_CUDA_ARCHS ?= 89-real;90-real;120-real;121-real
+
+# DAQIRI / DPDK / DOCA / MatX pins (consumed by framework-sdk).
+# NOTE: DAQIRI_REF is co-versioned with DPDK_VERSION and the mirrored SDK
+# Dockerfile block; bumping it requires re-syncing that block. See
+# containers/framework-sdk/Dockerfile.
+DAQIRI_REPO   ?= https://github.com/NVIDIA/daqiri.git
+DAQIRI_REF    ?= de4743eb6d088c289022b474a090476c95f04c94
+DPDK_VERSION  ?= 25.11
+DOCA_VERSION  ?= 3.2.1
+MATX_REF      ?= v1.0.0
+
+# Export for the framework-dev sub-make (only the SDK base tag is needed).
+export FRAMEWORK_SDK_TAG
+
 # ──────────────────────────────────────────────────────────────
 .PHONY: all base holohub-dpdk holohub-gpunetio holohub-rivermax \
-        ano-tools ano-dev clean help configure show-config
+        ano-tools ano-dev framework-base framework-sdk framework-dev \
+        framework-release-arch framework-manifest \
+        clean help configure show-config
 
 all: base holohub-dpdk ## Build layer-0 + layer-1 dpdk (default)
 
@@ -97,6 +139,37 @@ ano-tools: holohub-dpdk ## Build layer-2 SDK image
 ano-dev: ano-tools ## Build ano-dev container
 	$(MAKE) -C containers/ano-dev docker-build
 
+# ── Framework (DAQIRI-only) build chain ──────────────────────
+framework-base: ## Build framework layer-0 base (certs/entrypoint, CUDA 13.1/ubu24)
+	docker build \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_IMAGE) \
+		-t $(FRAMEWORK_BASE_TAG) \
+		-f containers/base/Dockerfile .
+
+framework-sdk: framework-base ## Build framework SDK layer (DPDK/DOCA/DAQIRI/MatX + C++ libs)
+	docker build \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_TAG) \
+		--build-arg CUDA_ARCHS="$(FRAMEWORK_CUDA_ARCHS)" \
+		--build-arg DAQIRI_REPO=$(DAQIRI_REPO) \
+		--build-arg DAQIRI_REF=$(DAQIRI_REF) \
+		--build-arg DPDK_VERSION=$(DPDK_VERSION) \
+		--build-arg DOCA_VERSION=$(DOCA_VERSION) \
+		--build-arg MATX_REF=$(MATX_REF) \
+		-t $(FRAMEWORK_SDK_TAG) \
+		-f containers/framework-sdk/Dockerfile \
+		containers/framework-sdk/
+
+framework-dev: framework-sdk ## Build framework-dev container (DAQIRI-only, Holoscan-free)
+	$(MAKE) -C containers/framework-dev docker-build
+
+# Multi-arch release: build natively on each platform host, then assemble a
+# manifest. amd64 (Spark/GB10 is arm64) and arm64 are built on their own hosts.
+framework-release-arch: framework-sdk ## Build+push this host's arch image (run on amd64 AND arm64 hosts)
+	$(MAKE) -C containers/framework-dev docker-release-arch
+
+framework-manifest: ## Assemble+push the multi-arch manifest (after release-arch on all hosts)
+	$(MAKE) -C containers/framework-dev docker-manifest
+
 # ── Utilities ────────────────────────────────────────────────
 clean: ## Remove built images
 	docker rmi -f $(BASE_TAG) \
@@ -129,6 +202,15 @@ show-config: ## Print effective build settings
 	@echo "  CUDA_VER        = $(CUDA_VER)"
 	@echo "  BASE_TAG        = $(BASE_TAG)"
 	@echo "  CUDA_ARCHS      = $(CUDA_ARCHS)"
+	@echo "  --- framework (DAQIRI-only) ---"
+	@echo "  FRAMEWORK_BASE_IMAGE = $(FRAMEWORK_BASE_IMAGE)"
+	@echo "  FRAMEWORK_BASE_TAG   = $(FRAMEWORK_BASE_TAG)"
+	@echo "  FRAMEWORK_SDK_TAG    = $(FRAMEWORK_SDK_TAG)"
+	@echo "  FRAMEWORK_CUDA_ARCHS = $(FRAMEWORK_CUDA_ARCHS)"
+	@echo "  DAQIRI_REF           = $(DAQIRI_REF)"
+	@echo "  DPDK_VERSION         = $(DPDK_VERSION)"
+	@echo "  DOCA_VERSION         = $(DOCA_VERSION)"
+	@echo "  MATX_REF             = $(MATX_REF)"
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
