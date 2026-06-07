@@ -99,7 +99,6 @@ doca_ver="${DOCA_VERSION:-}"
 
 # GPU libraries
 matx_ver=$(cmake_pkg_ver /usr/local/lib/cmake/matx/matx-config-version.cmake)
-nvbench_ver=$(cmake_pkg_ver /usr/local/lib/cmake/nvbench/nvbench-config-version.cmake)
 gtest_ver=$(cmake_pkg_ver /usr/local/lib/cmake/GTest/GTestConfigVersion.cmake)
 
 # C++ libraries
@@ -135,7 +134,7 @@ row "Py Packages" "$(join "$(tag vrtigo "$vrtigo_ver")" "$(tag pytest "$pytest_v
 cont              "$(join "$(tag pyqtgraph "$pyqtgraph_ver")" "$(tag PyQt6 "$pyqt6_ver")")"
 row "DAQIRI"      "$(join "$(tag DAQIRI "$daqiri_ver")" "$(tag commit "$daqiri_commit")")"
 row "Networking"  "$(join "$(tag DPDK "$dpdk_ver")" "$(tag DOCA "$doca_ver")" "$(tag OFED "$ofed_ver")")"
-row "GPU Libs"    "$(join "$(tag MatX "$matx_ver")" "$(tag nvbench "$nvbench_ver")" "$(tag GTest "$gtest_ver")")"
+row "GPU Libs"    "$(join "$(tag MatX "$matx_ver")" "$(tag GTest "$gtest_ver")")"
 row "C++ Libs"    "$(join "$(tag Boost "$boost_ver")" "$(tag spdlog "$spdlog_ver")" "$(tag Taskflow "$taskflow_ver")")"
 cont              "$(join "$(tag Poco "$poco_ver")" "$(tag yaml-cpp "$yamlcpp_ver")")"
 row "Tools"       "$(join "$(tag git "$git_ver")" "$(tag gdb "$gdb_ver")" "$(tag doxygen "$doxygen_ver")" "$(tag vim "$vim_ver")")"

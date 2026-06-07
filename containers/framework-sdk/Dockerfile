@@ -18,7 +18,7 @@ SHELL ["/bin/bash", "-eou", "pipefail", "-c"]
 
 # Make-level FRAMEWORK_CUDA_ARCHS is mapped to this Docker ARG by the
 # top-level Makefile (--build-arg CUDA_ARCHS=$(FRAMEWORK_CUDA_ARCHS)).
-# Every CUDA-compiled dependency below (DAQIRI, nvbench) consumes it so a
+# Every CUDA-compiled dependency below (e.g. DAQIRI) consumes it so a
 # single knob controls the whole stack's device-code targets.
 ARG CUDA_ARCHS
 RUN test -n "${CUDA_ARCHS}" || { echo "ERROR: CUDA_ARCHS build-arg is required"; exit 1; }
@@ -219,7 +219,7 @@ RUN git clone --branch ${MATX_REF} --depth 1 https://github.com/NVIDIA/MatX.git 
     && cmake --install /tmp/MatX/build \
     && rm -rf /tmp/MatX
 
-# ── Source builds: GTest, nvbench, spdlog, Taskflow ──────────────────
+# ── Source builds: GTest, spdlog, Taskflow ───────────────────────────
 RUN mkdir -p /tmp/builds \
     && cd /tmp/builds \
     \
@@ -231,20 +231,6 @@ RUN mkdir -p /tmp/builds \
         -DCMAKE_BUILD_TYPE=Release \
         -DBUILD_GMOCK=ON \
         -DBUILD_SHARED_LIBS=OFF \
-    && cmake --build build -j$(nproc) \
-    && cmake --install build \
-    && cd /tmp/builds \
-    \
-    # nvbench (CUDA arch honors the stack-wide ${CUDA_ARCHS} knob)
-    && git clone --branch main --depth 1 https://github.com/NVIDIA/nvbench.git \
-    && cd nvbench \
-    && cmake -B build \
-        -DNVBench_ENABLE_EXAMPLES=OFF \
-        -DNVBench_ENABLE_TESTING=OFF \
-        -DNVBench_ENABLE_CUPTI=OFF \
-        -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHS}" \
-        -DCMAKE_INSTALL_PREFIX=/usr/local \
-        -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j$(nproc) \
     && cmake --install build \
     && cd /tmp/builds \
