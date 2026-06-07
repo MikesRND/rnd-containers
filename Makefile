@@ -80,7 +80,9 @@ DAQIRI_REPO   ?= https://github.com/NVIDIA/daqiri.git
 DAQIRI_REF    ?= de4743eb6d088c289022b474a090476c95f04c94
 DPDK_VERSION  ?= 25.11
 DOCA_VERSION  ?= 3.2.1
-MATX_REF      ?= v1.0.0
+# v0.9.4 matches the MatX version bundled in Holoscan (ano stack) — keep the
+# two stacks on the same MatX release. See ano-dev /opt/nvidia/holoscan/NOTICE.
+MATX_REF      ?= v0.9.4
 
 # Export for the framework-dev sub-make (only the SDK base tag is needed).
 export FRAMEWORK_SDK_TAG

@@ -28,7 +28,7 @@ ARG DAQIRI_REPO=https://github.com/NVIDIA/daqiri.git
 ARG DAQIRI_REF=de4743eb6d088c289022b474a090476c95f04c94
 ARG DPDK_VERSION=25.11
 ARG DOCA_VERSION=3.2.1
-ARG MATX_REF=v1.0.0
+ARG MATX_REF=v0.9.4
 ARG DEBIAN_FRONTEND=noninteractive
 # Auto-populated by BuildKit from --platform (amd64 on an x86 host, arm64 on
 # Grace/SBSA). Drives the DOCA repo arch below (x86_64 vs arm64-sbsa). No
