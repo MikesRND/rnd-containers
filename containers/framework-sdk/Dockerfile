@@ -57,6 +57,7 @@ ENV PATH="${CUDA_HOME}/bin:${PATH}"
 #      overridden with the stack-wide ${CUDA_ARCHS} knob.
 #   3. Optional upstream stages (rivermax, OpenTelemetry, python bindings)
 #      are not mirrored; this stack builds the default dpdk+socket managers.
+#   4. DPDK is configured with max_lcores=256 for larger CPU affinity sets.
 #
 # CONTRACT: changing DAQIRI_REF is NOT a free runtime override. It requires
 # re-diffing this block against the Dockerfile at the new ref AND validating
@@ -155,6 +156,7 @@ RUN curl -fsSL https://fast.dpdk.org/rel/dpdk-${DPDK_VERSION}.tar.xz -o /tmp/dpd
        done \
     && meson setup ${DPDK_BUILD_DIR} \
         --prefix=${DPDK_INSTALL_PREFIX} \
+        -Dmax_lcores=256 \
         -Dtests=false \
         -Dplatform=generic \
         -Denable_docs=false \

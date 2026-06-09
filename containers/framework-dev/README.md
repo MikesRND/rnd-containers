@@ -81,8 +81,9 @@ Requires a registry login and `docker buildx`.
 
 - DAQIRI installed under `/opt/daqiri` (managers: `dpdk socket`); bench/example
   YAMLs land in `/opt/daqiri/bin` (DAQIRI's install layout).
-- Patched upstream DPDK 25.11 under `/usr/local` (exposes
-  `rte_extmem_register_dmabuf` via DAQIRI's `dmabuf.patch`).
+- Patched upstream DPDK 25.11 under `/usr/local`, configured with
+  `max_lcores=256` and exposing `rte_extmem_register_dmabuf` via DAQIRI's
+  `dmabuf.patch`.
 - MatX (`v1.0.0`), nvbench, GTest, spdlog, Taskflow installed under
   `/usr/local`; Boost, Poco, yaml-cpp via apt.
 - No Holoscan SDK, no HoloHub clone, no `holoscan-networking`.
