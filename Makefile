@@ -77,7 +77,7 @@ FRAMEWORK_CUDA_ARCHS ?= 89-real;90-real;120-real;121-real
 # Dockerfile block; bumping it requires re-syncing that block. See
 # containers/framework-sdk/Dockerfile.
 DAQIRI_REPO   ?= https://github.com/MikesRND/daqiri.git
-DAQIRI_REF    ?= bedf31ab707c4c66e644ed9a576baa7b7101d4de
+DAQIRI_REF    ?= 583f0250a562688857682127856be0fb07bc4fbd
 DPDK_VERSION  ?= 25.11
 DOCA_VERSION  ?= 3.2.1
 # v0.9.4 matches the MatX version bundled in Holoscan (ano stack) — keep the
