@@ -76,8 +76,8 @@ FRAMEWORK_CUDA_ARCHS ?= 89-real;90-real;120-real;121-real
 # NOTE: DAQIRI_REF is co-versioned with DPDK_VERSION and the mirrored SDK
 # Dockerfile block; bumping it requires re-syncing that block. See
 # containers/framework-sdk/Dockerfile.
-DAQIRI_REPO   ?= https://github.com/MikesRND/daqiri.git
-DAQIRI_REF    ?= 583f0250a562688857682127856be0fb07bc4fbd
+DAQIRI_REPO   ?= https://github.com/NVIDIA/daqiri.git
+DAQIRI_REF    ?= a89bd4aa54dd217c97eeef903569aec998568f5c
 DPDK_VERSION  ?= 25.11
 DOCA_VERSION  ?= 3.2.1
 # v0.9.4 matches the MatX version bundled in Holoscan (ano stack) — keep the

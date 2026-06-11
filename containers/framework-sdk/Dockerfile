@@ -24,8 +24,8 @@ ARG CUDA_ARCHS
 RUN test -n "${CUDA_ARCHS}" || { echo "ERROR: CUDA_ARCHS build-arg is required"; exit 1; }
 
 # DAQIRI / DPDK / DOCA / MatX pins (defaults overridable via --build-arg).
-ARG DAQIRI_REPO=https://github.com/MikesRND/daqiri.git
-ARG DAQIRI_REF=583f0250a562688857682127856be0fb07bc4fbd
+ARG DAQIRI_REPO=https://github.com/NVIDIA/daqiri.git
+ARG DAQIRI_REF=a89bd4aa54dd217c97eeef903569aec998568f5c
 ARG DPDK_VERSION=25.11
 ARG DOCA_VERSION=3.2.1
 ARG MATX_REF=v0.9.4
@@ -42,7 +42,7 @@ ENV PATH="${CUDA_HOME}/bin:${PATH}"
 # BEGIN mirrored DAQIRI build block  ---  KEEP IN SYNC WITH UPSTREAM
 # ---------------------------------------------------------------------
 # Source of truth (pinned):
-#   https://github.com/MikesRND/daqiri/blob/583f0250a562688857682127856be0fb07bc4fbd/Dockerfile
+#   https://github.com/NVIDIA/daqiri/blob/a89bd4aa54dd217c97eeef903569aec998568f5c/Dockerfile
 #
 # The package lists, DOCA repo wiring, DPDK build invocation (incl. the
 # disable_drivers list and patch loop), and the DAQIRI cmake configure are
