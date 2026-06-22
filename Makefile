@@ -45,6 +45,13 @@ export REGISTRY
 export IMAGE_NAMESPACE
 export IMAGE_SOURCE
 
+# Version vars (VER_SEMVER / VER_VERSION_FULL / VER_GIT_COMMIT) for the
+# framework release tags. Track the framework-dev image version so top-level
+# release tags match what the framework-dev sub-make produces. Must precede the
+# framework vars/targets that reference VER_*.
+VERSION_FILE := containers/framework-dev/VERSION
+include mk/version.mk
+
 # ── Framework (DAQIRI-only, Holoscan-free) stack ─────────────
 # Independent of the ANO/HoloHub layers above. Targets the DAQIRI-aligned
 # CUDA 13.1 / Ubuntu 24.04 platform and mirrors DAQIRI's DPDK/DOCA/DAQIRI
@@ -84,6 +91,27 @@ DOCA_VERSION  ?= 3.2.1
 # two stacks on the same MatX release. See ano-dev /opt/nvidia/holoscan/NOTICE.
 MATX_REF      ?= v0.9.4
 
+# ── buildx/QEMU release registry tags (single-host multi-arch path) ──────────
+# Registry-qualified reference images for the pushed base/SDK layers. A
+# multi-arch buildx runs on the docker-container driver and resolves FROM
+# per-arch from a registry, so each layer is pushed before the next builds on it.
+FRAMEWORK_BASE_RELEASE_IMAGE ?= $(_REG)$(IMAGE_NAMESPACE)/framework-base
+FRAMEWORK_SDK_RELEASE_IMAGE  ?= $(_REG)$(IMAGE_NAMESPACE)/framework-sdk
+# Stable reference tag the SDK builds FROM (decoupled from the dev semver).
+FRAMEWORK_BASE_RELEASE_TAG   ?= cuda13.1-ubu24-devel-base1
+# Deliberate literal SDK version. Bump whenever ANY SDK input changes:
+# FRAMEWORK_BASE_RELEASE_TAG, DAQIRI_REF, DPDK_VERSION, DOCA_VERSION, MATX_REF,
+# FRAMEWORK_CUDA_ARCHS, FRAMEWORK_ARM64_CUDA_ARCHS (lean arm64 SDK), or
+# containers/framework-sdk/Dockerfile. (Use `make framework-sdk-version`.)
+FRAMEWORK_SDK_VERSION        ?= 0.1.0-sdk1
+FRAMEWORK_SDK_REF            ?= $(FRAMEWORK_SDK_RELEASE_IMAGE):$(FRAMEWORK_SDK_VERSION)         # multi-arch SDK (both-arch dev)
+FRAMEWORK_SDK_REF_ARM64      ?= $(FRAMEWORK_SDK_RELEASE_IMAGE):$(FRAMEWORK_SDK_VERSION)-arm64   # lean arm64 SDK (Spark dev)
+# Spark-lean default device archs for the arm64-only SDK (GB10 only). Override
+# for a wider (non-Spark) arm64 SDK.
+FRAMEWORK_ARM64_CUDA_ARCHS   ?= 121-real
+BUILDX_PLATFORMS             ?= linux/amd64,linux/arm64
+BUILDX_BUILDER               ?= framework-builder
+
 # Export for the framework-dev sub-make (only the SDK base tag is needed).
 export FRAMEWORK_SDK_TAG
 
@@ -91,6 +119,11 @@ export FRAMEWORK_SDK_TAG
 .PHONY: all base holohub-dpdk holohub-gpunetio holohub-rivermax \
         ano-tools ano-dev framework-base framework-sdk framework-dev \
         framework-release-arch framework-manifest \
+        framework-buildx-setup framework-base-release-multiarch \
+        framework-sdk-release-multiarch framework-sdk-release-arm64 \
+        framework-release-multiarch framework-release-arm64 \
+        framework-release-amd64 framework-stack-release-multiarch \
+        framework-sdk-version \
         clean help configure show-config
 
 all: base holohub-dpdk ## Build layer-0 + layer-1 dpdk (default)
@@ -171,6 +204,104 @@ framework-release-arch: framework-sdk ## Build+push this host's arch image (run 
 
 framework-manifest: ## Assemble+push the multi-arch manifest (after release-arch on all hosts)
 	$(MAKE) -C containers/framework-dev docker-manifest
+
+# ── buildx/QEMU single-host multi-arch release ───────────────
+# Cross-build arm64 (and amd64) from one host under QEMU, for offline targets
+# like the DGX Spark/GB10. The pinned base+SDK are built+pushed once per SDK pin
+# change (heavy under emulation); routine dev releases only rebuild the thin
+# framework-dev layer on top of the pushed SDK.
+framework-buildx-setup: ## Install QEMU emulators + ensure the buildx builder exists (idempotent)
+	docker run --privileged --rm tonistiigi/binfmt --install all
+	docker buildx inspect $(BUILDX_BUILDER) >/dev/null 2>&1 || \
+		docker buildx create --name $(BUILDX_BUILDER) --driver docker-container
+	docker buildx inspect $(BUILDX_BUILDER) --bootstrap
+# Note (WSL2): binfmt_misc registration may not survive a Docker/WSL restart —
+# re-run this target if cross-arch builds suddenly fail to start.
+
+framework-base-release-multiarch: ## buildx build+push multi-arch framework-base reference tag
+	@printf '%s\n' '$(BUILDX_PLATFORMS)' | grep -q ',' || { echo "ERROR: $@ needs multi-arch BUILDX_PLATFORMS (got '$(BUILDX_PLATFORMS)'); use a -arch target for a single arch"; exit 1; }
+	docker buildx build \
+		--builder $(BUILDX_BUILDER) \
+		--platform $(BUILDX_PLATFORMS) \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_IMAGE) \
+		--label "org.opencontainers.image.version=$(VER_SEMVER)" \
+		--label "org.opencontainers.image.revision=$(VER_GIT_COMMIT)" \
+		--label "org.opencontainers.image.source=$(IMAGE_SOURCE)" \
+		-t $(FRAMEWORK_BASE_RELEASE_IMAGE):$(FRAMEWORK_BASE_RELEASE_TAG) \
+		-t $(FRAMEWORK_BASE_RELEASE_IMAGE):$(VER_VERSION_FULL) \
+		--push \
+		-f containers/base/Dockerfile .
+
+framework-sdk-release-multiarch: ## buildx build+push BOTH-arch SDK (heavy: emulated nvcc+DPDK)
+	@printf '%s\n' '$(BUILDX_PLATFORMS)' | grep -q ',' || { echo "ERROR: $@ needs multi-arch BUILDX_PLATFORMS (got '$(BUILDX_PLATFORMS)'); use a -arch target for a single arch"; exit 1; }
+	docker buildx build \
+		--builder $(BUILDX_BUILDER) \
+		--platform $(BUILDX_PLATFORMS) \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_RELEASE_IMAGE):$(FRAMEWORK_BASE_RELEASE_TAG) \
+		--build-arg CUDA_ARCHS="$(FRAMEWORK_CUDA_ARCHS)" \
+		--build-arg DAQIRI_REPO=$(DAQIRI_REPO) \
+		--build-arg DAQIRI_REF=$(DAQIRI_REF) \
+		--build-arg DPDK_VERSION=$(DPDK_VERSION) \
+		--build-arg DOCA_VERSION=$(DOCA_VERSION) \
+		--build-arg MATX_REF=$(MATX_REF) \
+		--label "org.opencontainers.image.version=$(VER_SEMVER)" \
+		--label "org.opencontainers.image.revision=$(VER_GIT_COMMIT)" \
+		--label "org.opencontainers.image.source=$(IMAGE_SOURCE)" \
+		-t $(FRAMEWORK_SDK_RELEASE_IMAGE):$(FRAMEWORK_SDK_VERSION) \
+		-t $(FRAMEWORK_SDK_RELEASE_IMAGE):$(VER_VERSION_FULL)-sdk \
+		--push \
+		-f containers/framework-sdk/Dockerfile containers/framework-sdk/
+
+framework-sdk-release-arm64: ## buildx build+push Spark-lean arm64-only SDK (GB10 archs by default)
+	docker buildx build \
+		--builder $(BUILDX_BUILDER) \
+		--platform linux/arm64 \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_RELEASE_IMAGE):$(FRAMEWORK_BASE_RELEASE_TAG) \
+		--build-arg CUDA_ARCHS="$(FRAMEWORK_ARM64_CUDA_ARCHS)" \
+		--build-arg DAQIRI_REPO=$(DAQIRI_REPO) \
+		--build-arg DAQIRI_REF=$(DAQIRI_REF) \
+		--build-arg DPDK_VERSION=$(DPDK_VERSION) \
+		--build-arg DOCA_VERSION=$(DOCA_VERSION) \
+		--build-arg MATX_REF=$(MATX_REF) \
+		--label "org.opencontainers.image.version=$(VER_SEMVER)" \
+		--label "org.opencontainers.image.revision=$(VER_GIT_COMMIT)" \
+		--label "org.opencontainers.image.source=$(IMAGE_SOURCE)" \
+		-t $(FRAMEWORK_SDK_RELEASE_IMAGE):$(FRAMEWORK_SDK_VERSION)-arm64 \
+		--push \
+		-f containers/framework-sdk/Dockerfile containers/framework-sdk/
+
+framework-release-multiarch: ## Routine both-arch dev release on the multi-arch SDK (fast)
+	$(MAKE) -C containers/framework-dev docker-release-multiarch \
+		BASE_IMAGE_MULTIARCH=$(FRAMEWORK_SDK_REF) \
+		BUILDX_PLATFORMS=$(BUILDX_PLATFORMS) \
+		BUILDX_BUILDER=$(BUILDX_BUILDER)
+
+framework-release-arm64: ## Spark arm64 dev release (defaults to the lean arm64 SDK)
+	$(MAKE) -C containers/framework-dev docker-release-multiarch-arch \
+		BUILDX_PLATFORM=linux/arm64 ARCH=arm64 \
+		BASE_IMAGE_MULTIARCH=$(FRAMEWORK_SDK_REF_ARM64) \
+		BUILDX_BUILDER=$(BUILDX_BUILDER)
+
+framework-release-amd64: ## amd64-only dev release on the multi-arch SDK
+	$(MAKE) -C containers/framework-dev docker-release-multiarch-arch \
+		BUILDX_PLATFORM=linux/amd64 ARCH=amd64 \
+		BASE_IMAGE_MULTIARCH=$(FRAMEWORK_SDK_REF) \
+		BUILDX_BUILDER=$(BUILDX_BUILDER)
+
+framework-stack-release-multiarch: ## Deliberate full both-arch refresh: base -> sdk -> dev (ordered)
+	$(MAKE) framework-base-release-multiarch
+	$(MAKE) framework-sdk-release-multiarch
+	$(MAKE) framework-release-multiarch
+
+framework-sdk-version: ## Print the SDK pin set (bump FRAMEWORK_SDK_VERSION when any of these change)
+	@echo "FRAMEWORK_SDK_VERSION=$(FRAMEWORK_SDK_VERSION)"
+	@echo "FRAMEWORK_BASE_RELEASE_TAG=$(FRAMEWORK_BASE_RELEASE_TAG)"
+	@echo "DAQIRI_REF=$(DAQIRI_REF)"
+	@echo "DPDK_VERSION=$(DPDK_VERSION)"
+	@echo "DOCA_VERSION=$(DOCA_VERSION)"
+	@echo "MATX_REF=$(MATX_REF)"
+	@echo "FRAMEWORK_CUDA_ARCHS=$(FRAMEWORK_CUDA_ARCHS)"
+	@echo "FRAMEWORK_ARM64_CUDA_ARCHS=$(FRAMEWORK_ARM64_CUDA_ARCHS)"
 
 # ── Utilities ────────────────────────────────────────────────
 clean: ## Remove built images

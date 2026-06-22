@@ -11,9 +11,14 @@ COMPOSE_SERVICE := framework-dev
 # SDK base image; exported by the top-level Makefile, with a safe default.
 FRAMEWORK_SDK_TAG ?= framework-sdk
 
+# Base image to build FROM. Local/native builds use the SDK tag; buildx/QEMU
+# multi-arch builds override BASE_IMAGE_MULTIARCH with a registry-qualified,
+# already-pushed multi-arch (or arm64-lean) SDK tag so per-arch FROM resolves.
+FRAMEWORK_DEV_BASE_IMAGE ?= $(if $(BASE_IMAGE_MULTIARCH),$(BASE_IMAGE_MULTIARCH),$(FRAMEWORK_SDK_TAG))
+
 # This layer only consumes the SDK base image plus version metadata.
 DOCKER_BUILD_ARGS = \
-    --build-arg BASE_IMAGE=$(FRAMEWORK_SDK_TAG) \
+    --build-arg BASE_IMAGE=$(FRAMEWORK_DEV_BASE_IMAGE) \
     --build-arg CONTAINER_VERSION=$(VER_SEMVER) \
     --build-arg GIT_COMMIT=$(VER_GIT_COMMIT)
 
@@ -37,7 +42,8 @@ help:
 	@echo "  compose-shell  Shell into container"
 	@echo "  compose-logs   Follow logs"
 	@echo ""
-	@echo "  docker-release-arch  Build+push this host's arch tag (run on amd64 and arm64)"
-	@echo "  docker-manifest      Assemble+push multi-arch manifest from per-arch tags"
+	@echo "  docker-release-arch        Build+push this host's arch tag (run on amd64 and arm64)"
+	@echo "  docker-manifest            Assemble+push multi-arch manifest from per-arch tags"
+	@echo "  docker-release-multiarch   buildx/QEMU cross-build+push multi-arch (needs BASE_IMAGE_MULTIARCH)"
 	@echo ""
 	@echo "  version-info   Show version"
