@@ -101,8 +101,9 @@ export FRAMEWORK_SDK_TAG
 # ──────────────────────────────────────────────────────────────
 .PHONY: all base holohub-dpdk holohub-gpunetio holohub-rivermax \
         ano-tools ano-dev framework-base framework-sdk framework-dev \
-        framework-release-arch framework-manifest \
-        framework-binfmt framework-arm64 \
+        framework-binfmt framework-manifest \
+        framework-amd64-build framework-amd64-push \
+        framework-arm64-build framework-arm64-push \
         clean help configure show-config
 
 all: base holohub-dpdk ## Build layer-0 + layer-1 dpdk (default)
@@ -176,24 +177,25 @@ framework-sdk: framework-base ## Build framework SDK layer (DPDK/DOCA/DAQIRI/Mat
 framework-dev: framework-sdk ## Build framework-dev container (DAQIRI-only, Holoscan-free)
 	$(MAKE) -C containers/framework-dev docker-build
 
-# Native arch-suffixed release: build the host arch (or, with ARCH=arm64, cross-
-# build via QEMU on the default builder), push the per-arch tag. An optional
-# manifest step assembles a consumer-facing multi-arch tag from per-arch tags.
-framework-release-arch: framework-sdk ## Build+push this host's arch image (native; for a manifest, run per host)
-	$(MAKE) -C containers/framework-dev docker-release-arch
-
-framework-manifest: ## Assemble+push the multi-arch manifest (after release-arch on all hosts)
-	$(MAKE) -C containers/framework-dev docker-manifest
-
-# ── arm64 cross-build for the offline Spark (GB10) ───────────
-# Cross-build the full base -> sdk -> dev chain for arm64 on this amd64 host
-# under QEMU, then push framework-dev:<version>-arm64 (the Spark pulls that tag).
-# Each layer builds on the DEFAULT buildx builder (--load) so it reuses the
-# daemon's corporate CA trust and chains FROM the prior local arm64 image.
+# ── Per-arch release: separate build (local, --load) and push steps ──────────
+# Build leaves arch-suffixed tags in the local image store (inspect/run before
+# pushing); push uploads them. framework-manifest then assembles the consumer-
+# facing multi-arch tag from the two per-arch tags. See framework-binfmt below
+# for the one-time arm64-on-amd64 QEMU setup.
 framework-binfmt: ## One-time: install QEMU emulators for arm64-on-amd64 cross-builds
 	docker run --privileged --rm tonistiigi/binfmt --install all
 
-framework-arm64: ## Cross-build+push the arm64 Spark image (framework-dev:<ver>-arm64)
+# amd64: native build (base/sdk via plain docker build, dev via buildx --load).
+framework-amd64-build: framework-sdk ## Build amd64 image locally (no push; run on an amd64 host)
+	$(MAKE) -C containers/framework-dev docker-build-arch ARCH=amd64
+
+framework-amd64-push: ## Push the amd64 dev tags built by framework-amd64-build
+	$(MAKE) -C containers/framework-dev docker-push-arch ARCH=amd64
+
+# arm64: cross-build the full base -> sdk -> dev chain under QEMU on the DEFAULT
+# buildx builder (--load), so each layer reuses the daemon's corporate CA trust
+# and chains FROM the prior local arm64 image. No push.
+framework-arm64-build: ## Cross-build arm64 image locally via QEMU (no push)
 	docker buildx build --platform linux/arm64 --load \
 		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_IMAGE) \
 		-t $(FRAMEWORK_BASE_TAG_ARM64) \
@@ -209,8 +211,14 @@ framework-arm64: ## Cross-build+push the arm64 Spark image (framework-dev:<ver>-
 		-t $(FRAMEWORK_SDK_TAG_ARM64) \
 		-f containers/framework-sdk/Dockerfile \
 		containers/framework-sdk/
-	$(MAKE) -C containers/framework-dev docker-release-arch \
+	$(MAKE) -C containers/framework-dev docker-build-arch \
 		ARCH=arm64 FRAMEWORK_SDK_TAG=$(FRAMEWORK_SDK_TAG_ARM64)
+
+framework-arm64-push: ## Push the arm64 dev tags built by framework-arm64-build
+	$(MAKE) -C containers/framework-dev docker-push-arch ARCH=arm64
+
+framework-manifest: ## Assemble+push the multi-arch manifest (after both arch tags are pushed)
+	$(MAKE) -C containers/framework-dev docker-manifest
 
 # ── Utilities ────────────────────────────────────────────────
 clean: ## Remove built images

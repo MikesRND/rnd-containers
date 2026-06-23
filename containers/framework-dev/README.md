@@ -40,20 +40,26 @@ device compilation (and much less RAM) than CUDA 13.1's ~12-arch `all`. Use
 
 DGX Spark / GB10 has a **Grace (arm64) CPU**, so the published image must be
 multi-arch: the device arch (sm_121) is not enough, the host code must also be
-aarch64. Because the layered chain (`base -> sdk -> dev`) can't be cross-built
-in one `buildx --platform` pass and QEMU emulation of a CUDA/DPDK build is
-impractical, each platform is built **natively on its own host**, then a
-manifest is assembled:
+aarch64. Both arches are built on a single amd64 workstation — amd64 natively,
+arm64 cross-built under QEMU on the **default** buildx builder (which reuses the
+daemon's corporate CA/proxy trust) — then a manifest is assembled. CUDA itself
+is never recompiled; only our SDK work (DAQIRI `nvcc` + DPDK source build) runs
+emulated, so the arm64 build is the slow leg (hours).
+
+Build and push are **separate** steps per arch, so you can inspect/run an image
+locally before publishing it:
 
 ```sh
-# on an amd64 host (e.g. x86 workstation / CI runner):
-make framework-release-arch        # builds + pushes :<ver>-amd64
+make framework-binfmt              # one-time: QEMU emulators (re-run after a WSL/Docker restart)
 
-# on an arm64 host (DGX Spark, Grace box, or arm64 CI runner; no GPU needed):
-make framework-release-arch        # builds + pushes :<ver>-arm64
+make framework-amd64-build         # build :<ver>-amd64 locally (native, no push)
+make framework-amd64-push          # push :<ver>-amd64
 
-# on either host, after BOTH arch tags are pushed:
-make framework-manifest            # assembles + pushes :<ver>, :<full>, :latest
+make framework-arm64-build         # cross-build :<ver>-arm64 locally via QEMU (no push)
+make framework-arm64-push          # push :<ver>-arm64
+
+# after BOTH arch tags are pushed:
+make framework-manifest            # assembles + pushes :<ver>, :<full>
 ```
 
 Consumers then pull a single tag (`framework-dev:<ver>`) and Docker selects
@@ -63,10 +69,11 @@ amd64 or arm64 automatically. Tag scheme:
 | --------------------------- | ---------------------------- |
 | `:<semver>-amd64` / `-arm64`| per-arch (intermediate)      |
 | `:<full>-amd64`  / `-arm64` | per-arch, commit-pinned      |
-| `:<semver>`, `:<full>`, `:latest` | multi-arch manifest    |
+| `:<semver>`, `:<full>`      | multi-arch manifest          |
 
-`<full>` = `<semver>-<git-commit>[-dirty]`; release from a clean tree.
-Requires a registry login and `docker buildx`.
+`<full>` = `<semver>-<git-commit>[-dirty]`; release from a clean tree. `:latest`
+is intentionally never pushed — consumers pin an explicit version tag. Requires
+a registry login and `docker buildx`.
 
 ## Run
 
