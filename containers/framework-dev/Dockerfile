@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 #
 # framework-dev: final, thin developer layer for the DAQIRI-only stack.
 # Built FROM framework-sdk. Adds only dev conveniences (workspace mapping,

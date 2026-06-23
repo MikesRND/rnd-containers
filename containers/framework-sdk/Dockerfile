@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 #
 # framework-sdk: heavy, cached SDK/toolchain layer for the DAQIRI-only
 # (Holoscan-free) "framework-dev" container stack.
