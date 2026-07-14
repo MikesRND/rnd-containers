@@ -84,13 +84,26 @@ DOCA_VERSION  ?= 3.2.1
 # two stacks on the same MatX release. See ano-dev /opt/nvidia/holoscan/NOTICE.
 MATX_REF      ?= v0.9.4
 
+# ── arm64 cross-build for the offline Spark (GB10) ───────────────────────────
+# Cross-built on the amd64 workstation under QEMU, on the DEFAULT buildx builder
+# (which IS the host daemon, so it reuses the daemon's corporate CA/proxy trust
+# and sees local images for FROM chaining). Spark-lean device archs (GB10 only)
+# keep emulated nvcc to a minimum; override for wider arm64 coverage.
+FRAMEWORK_ARM64_CUDA_ARCHS ?= 121-real
+# Arch-suffixed local tags so the arm64 chain doesn't collide with the host-arch
+# framework-base / framework-sdk tags built by the native targets.
+FRAMEWORK_BASE_TAG_ARM64   ?= $(FRAMEWORK_BASE_TAG)-arm64
+FRAMEWORK_SDK_TAG_ARM64    ?= $(FRAMEWORK_SDK_TAG)-arm64
+
 # Export for the framework-dev sub-make (only the SDK base tag is needed).
 export FRAMEWORK_SDK_TAG
 
 # ──────────────────────────────────────────────────────────────
 .PHONY: all base holohub-dpdk holohub-gpunetio holohub-rivermax \
         ano-tools ano-dev framework-base framework-sdk framework-dev \
-        framework-release-arch framework-manifest \
+        framework-binfmt framework-manifest \
+        framework-amd64-build framework-amd64-push \
+        framework-arm64-build framework-arm64-push \
         clean help configure show-config
 
 all: base holohub-dpdk ## Build layer-0 + layer-1 dpdk (default)
@@ -164,12 +177,47 @@ framework-sdk: framework-base ## Build framework SDK layer (DPDK/DOCA/DAQIRI/Mat
 framework-dev: framework-sdk ## Build framework-dev container (DAQIRI-only, Holoscan-free)
 	$(MAKE) -C containers/framework-dev docker-build
 
-# Multi-arch release: build natively on each platform host, then assemble a
-# manifest. amd64 (Spark/GB10 is arm64) and arm64 are built on their own hosts.
-framework-release-arch: framework-sdk ## Build+push this host's arch image (run on amd64 AND arm64 hosts)
-	$(MAKE) -C containers/framework-dev docker-release-arch
+# ── Per-arch release: separate build (local, --load) and push steps ──────────
+# Build leaves arch-suffixed tags in the local image store (inspect/run before
+# pushing); push uploads them. framework-manifest then assembles the consumer-
+# facing multi-arch tag from the two per-arch tags. See framework-binfmt below
+# for the one-time arm64-on-amd64 QEMU setup.
+framework-binfmt: ## One-time: install QEMU emulators for arm64-on-amd64 cross-builds
+	docker run --privileged --rm tonistiigi/binfmt --install all
 
-framework-manifest: ## Assemble+push the multi-arch manifest (after release-arch on all hosts)
+# amd64: native build (base/sdk via plain docker build, dev via buildx --load).
+framework-amd64-build: framework-sdk ## Build amd64 image locally (no push; run on an amd64 host)
+	$(MAKE) -C containers/framework-dev docker-build-arch ARCH=amd64
+
+framework-amd64-push: ## Push the amd64 dev tags built by framework-amd64-build
+	$(MAKE) -C containers/framework-dev docker-push-arch ARCH=amd64
+
+# arm64: cross-build the full base -> sdk -> dev chain under QEMU on the DEFAULT
+# buildx builder (--load), so each layer reuses the daemon's corporate CA trust
+# and chains FROM the prior local arm64 image. No push.
+framework-arm64-build: ## Cross-build arm64 image locally via QEMU (no push)
+	docker buildx build --platform linux/arm64 --load \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_IMAGE) \
+		-t $(FRAMEWORK_BASE_TAG_ARM64) \
+		-f containers/base/Dockerfile .
+	docker buildx build --platform linux/arm64 --load \
+		--build-arg BASE_IMAGE=$(FRAMEWORK_BASE_TAG_ARM64) \
+		--build-arg CUDA_ARCHS="$(FRAMEWORK_ARM64_CUDA_ARCHS)" \
+		--build-arg DAQIRI_REPO=$(DAQIRI_REPO) \
+		--build-arg DAQIRI_REF=$(DAQIRI_REF) \
+		--build-arg DPDK_VERSION=$(DPDK_VERSION) \
+		--build-arg DOCA_VERSION=$(DOCA_VERSION) \
+		--build-arg MATX_REF=$(MATX_REF) \
+		-t $(FRAMEWORK_SDK_TAG_ARM64) \
+		-f containers/framework-sdk/Dockerfile \
+		containers/framework-sdk/
+	$(MAKE) -C containers/framework-dev docker-build-arch \
+		ARCH=arm64 FRAMEWORK_SDK_TAG=$(FRAMEWORK_SDK_TAG_ARM64)
+
+framework-arm64-push: ## Push the arm64 dev tags built by framework-arm64-build
+	$(MAKE) -C containers/framework-dev docker-push-arch ARCH=arm64
+
+framework-manifest: ## Assemble+push the multi-arch manifest (after both arch tags are pushed)
 	$(MAKE) -C containers/framework-dev docker-manifest
 
 # ── Utilities ────────────────────────────────────────────────
@@ -215,5 +263,5 @@ show-config: ## Print effective build settings
 	@echo "  MATX_REF             = $(MATX_REF)"
 
 help: ## Show this help
-	@grep -hE '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -hE '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'

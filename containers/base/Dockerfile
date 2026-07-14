@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 ARG BASE_IMAGE=ubuntu:22.04
 FROM ${BASE_IMAGE}
 
@@ -24,7 +23,8 @@ RUN if [ -n "$(find /tmp/certs -name '*.crt' -o -name '*.pem' -o -name '*.cer' 2
 ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
     SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
     CURL_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
-    NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+    NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
+    PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 
 # ── Entrypoint + drop-in hook directory ────────────────────
 COPY scripts/entrypoint.sh /entrypoint.sh
